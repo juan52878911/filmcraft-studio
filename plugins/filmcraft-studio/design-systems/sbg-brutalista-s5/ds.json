@@ -1,0 +1,135 @@
+{
+ "id": "sbg-brutalista-s5",
+ "nombre": "AWS SBG EAN · brutalista · #RetoCertEAN Sesión 5",
+ "version": 1,
+ "gramatica": "brutalista@1",
+ "descripcion": "Reel de evento 9:16 del AWS Student Builder Group EAN. Bloques sólidos sin degradados ni esquinas, rejilla navy con píxeles de color, Iosevka Heavy para titulares y Menlo Bold para subtítulos. Paleta del flyer de la Sesión 5. Reglas de editor-filmcraft/references/estilo-brutalista.md.",
+ "match": {
+  "rutas": ["Reto de certificacion", "RetoCertEAN"],
+  "palabras": ["AWS", "SBG", "EAN", "Student Builder", "RetoCertEAN"],
+  "flyer": "assets/flyer.jpg",
+  "paleta_ref": ["#161D27", "#FF9900", "#AD5CFF", "#FF52EA", "#FFFFFF"]
+ },
+ "lienzo": {"ancho": 1080, "alto": 1920, "fps": 60, "plataforma": "reels"},
+ "paleta": {
+  "fondo": "#161D27",
+  "rejilla": "#232C3A",
+  "oscuro": "#161D27",
+  "claro": "#FFFFFF",
+  "acento1": "#FF9900",
+  "acento2": "#AD5CFF",
+  "acento3": "#FF52EA"
+ },
+ "fuentes": {
+  "titular": {"familia": "IosevkaTerm Nerd Font Mono", "estilo": "Heavy", "archivo": "~/Library/Fonts/IosevkaTermNerdFontMono-Heavy.ttf"},
+  "ui": {"familia": "Menlo", "estilo": "Bold", "archivo": "/System/Library/Fonts/Menlo.ttc"},
+  "meta": {"familia": "Menlo", "estilo": "Regular", "archivo": "/System/Library/Fonts/Menlo.ttc"}
+ },
+ "marca": {
+  "barra": "AWS STUDENT BUILDER GROUP · EAN",
+  "handle": "@awssbgean",
+  "hashtag": "#RetoCertEAN",
+  "cta": "SÍGUENOS · @AWSSBGEAN",
+  "cierre_palabras": ["#RETO", "CERT", "EAN"],
+  "cierre_linea": "SESIÓN 5 · IA Y MACHINE LEARNING EN AWS",
+  "cierre_pie": "AWS STUDENT BUILDER GROUP · UNIVERSIDAD EAN",
+  "titulo_pill": "RETO DE CERTIFICACIÓN AWS",
+  "titulo": "SESIÓN 5:\nIA Y MACHINE\nLEARNING\nEN AWS"
+ },
+ "pistas": {
+  "video": ["Fondo", "Main", "Tarjeta", "Producto", "Brand", "Captions", "Labels", "Pills", "Tags", "Eco", "Mattes"],
+  "audio": ["Dialogue", "Hits", "SFX", "Music", "SFX 2"],
+  "sfx": ["SFX 2", "SFX", "Hits"]
+ },
+ "roles_texto": {
+  "marca":     {"fuente": "ui", "tam": 35.6, "color": "oscuro", "fondo": "acento1", "margen": 42.7, "pista": "Brand", "pos": [0.5, 0.06], "align": "Center", "anim": "ninguna"},
+  "subtitulo": {"fuente": "ui", "tam": 74.7, "color": "claro", "fondo": "oscuro", "margen": 42.7, "pista": "Captions", "pos": [0.5, 0.78], "align": "Center", "anim": "ninguna", "max_chars": 20},
+  "etiqueta":  {"fuente": "titular", "tam": 130, "color": "oscuro", "fondo": ["acento1", "acento3", "acento2"], "margen": 42.7, "pista": "Labels", "zona": "libre", "align": "Center", "anim": "popIn", "sfx": "pop"},
+  "concepto":  {"fuente": "titular", "tam": 128, "color": "claro", "fondo": "oscuro", "margen": 42.7, "pista": "Labels", "zona": "libre", "align": "Center", "anim": "popIn", "sfx": "slide"},
+  "escalon":   {"fuente": "titular", "tam": 113.8, "color": "oscuro", "fondo": ["acento1", "acento2", "acento3"], "margen": 42.7, "pistas": ["Labels", "Pills", "Tags"], "zona": "libre", "align": "Center", "anim": "popIn", "sfx": "tecla", "paso_y": 0.085, "paso_x": 0.06},
+  "eco":       {"fuente": "titular", "tam": 150, "colores": [["claro", "oscuro"], ["oscuro", "acento1"], ["claro", "oscuro"]], "margen": 42.7, "pista": "Eco", "zona": "libre", "align": "Center", "anim": "eco", "frames": 8, "paso_y": 0.11, "sfx": "blip"},
+  "pill":      {"fuente": "ui", "tam": 46.2, "color": "oscuro", "fondo": "acento1", "margen": 42.7, "pista": "Pills", "align": "Center", "anim": "popIn"},
+  "tag":       {"fuente": "ui", "tam": 53.3, "color": "oscuro", "fondo": "acento3", "margen": 42.7, "pista": "Tags", "align": "Center", "anim": "popIn"},
+  "nombre":    {"fuente": "ui", "tam": 49.8, "color": "oscuro", "fondo": "acento1", "margen": 42.7, "pista": "Labels", "zona": "libre", "align": "Center", "anim": "popIn", "sfx": "nombre"},
+  "rotulo":    {"fuente": "ui", "tam": 42.7, "color": "claro", "fondo": "oscuro", "margen": 42.7, "pista": "Labels", "pos": [0.5, 0.14], "align": "Center", "anim": "ninguna"},
+  "titulo":    {"fuente": "titular", "tam": 156.4, "color": "claro", "fondo": null, "pista": "Labels", "x": 0.072, "y": 0.226, "interlinea": 1.25, "max_chars": 12, "align": "Left", "anim": "wordReveal"},
+  "cierre":    {"fuente": "titular", "tam": 213.3, "color": "claro", "fondo": null, "pista": "Labels", "x": 0.082, "y": 0.122, "interlinea": 1.25, "align": "Left", "anim": "wordReveal"},
+  "meta":      {"fuente": "meta", "tam": 39.1, "color": "claro", "fondo": null, "pista": "Tags", "align": "Center", "anim": "ninguna"},
+  "pie":       {"fuente": "ui", "tam": 35.6, "color": "claro", "fondo": null, "pista": "Eco", "pos": [0.5, 0.031], "align": "Center", "anim": "ninguna"}
+ },
+ "animaciones": {
+  "base_fps": 60,
+  "popIn": {"escala": [[0, 60], [8, 108], [14, 100]], "opacidad": [[0, 0], [6, 100]]},
+  "wordReveal": {"paso_f": 10, "fade_f": 8, "dy": 30},
+  "eco": {"frames": 8}
+ },
+ "continuidad": {
+  "entrada": {"escala": [108, 100], "f": 16, "fade_f": 6},
+  "jump_cut": {"punch": 112},
+  "salida": {"escala": [100, 105], "f": 8},
+  "zoom_crash": {"escala": [100, 130], "f": 10}
+ },
+ "transiciones": {
+  "preferencia": ["barrido_camara", "flash", "matte", "glitch", "corte"],
+  "flash": {"f": 6, "matte": "blanco", "sfx": "flash"},
+  "matte": {"f": 28, "mattes": ["acento1", "acento2", "acento3"], "sfx": "matte"},
+  "glitch": {"f": 12, "matte": "acento3", "sfx": "glitch"},
+  "barrido_camara": {"blur": 20, "f": 8, "sfx": "barrido"},
+  "corte": {}
+ },
+ "fondos": {
+  "titulo": "assets/bg-title.png",
+  "plano": "assets/bg-plain.png",
+  "cap": "assets/bg-cap.png",
+  "cierre": "assets/bg-outro.png"
+ },
+ "mattes": {
+  "blanco": "assets/matte-blanco.png",
+  "acento1": "assets/matte-naranja.png",
+  "acento2": "assets/matte-morado.png",
+  "acento3": "assets/matte-rosa.png"
+ },
+ "sfx": {
+  "dir": "assets/sfx",
+  "nivel_db": -4,
+  "mapa": {
+   "gancho": "transiciones/impacto.wav",
+   "cierre": "transiciones/impacto.wav",
+   "riser": "transiciones/riser-2s.wav",
+   "flash": "transiciones/flash-blanco.wav",
+   "matte": "transiciones/swipe.wav",
+   "glitch": "varios/estatica.wav",
+   "barrido": "transiciones/whoosh-largo.wav",
+   "titulo": "transiciones/whoosh-corto.wav",
+   "salto": "transiciones/sub-drop.wav",
+   "pop": "varios/pop.wav",
+   "slide": "varios/bloque-slide.wav",
+   "tecla": "varios/tecla-maquina.wav",
+   "blip": "varios/blip.wav",
+   "nombre": "varios/ding.wav",
+   "premio": "varios/stinger-cian.wav",
+   "foto": "varios/obturador.wav",
+   "click": "varios/click-ui.wav"
+  }
+ },
+ "musica": {"generador": "music_bed.py", "bpm": 112, "bajo_voz_db": -18, "sin_voz_db": -7, "rampa_s": 0.4, "salida_s": 1.5},
+ "grade": {
+  "lumetri": {"contrast": 15, "blacks": -12, "highlights": -15, "saturation": 105},
+  "sharpen": {"amount": 12},
+  "unsharp_mask": {"amount": 25, "radius": 30, "threshold": 0},
+  "noise": {"amount": 6, "color": false}
+ },
+ "audio": {"lufs": -14, "pico_dbtp": -1, "fade_corte_f": 3, "dialogo_db": 0},
+ "estructura": {
+  "duracion_s": [45, 60],
+  "orden": ["gancho", "titulo", "contenido", "humano", "invitados", "fotos", "cierre"],
+  "gancho_s": [4, 7],
+  "titulo_s": 2.5,
+  "cierre_s": 3,
+  "foto_f": 20,
+  "fotos_max": 6
+ },
+ "ritmo": {"plano_s": [1.2, 5.5], "margen_corte_ms": [30, 200], "energia": "alta"},
+ "zonas": {"evitar_y": [[0, 0.12], [0.72, 0.84]], "margen": 0.03, "y_min_bloque": 0.14},
+ "vocabulario": "AWS, Amazon SageMaker, Rekognition, Bedrock, Kiro, Claude, Geekcodey, EAN, Student Builder Group, reto de certificación, Cloud Practitioner"
+}

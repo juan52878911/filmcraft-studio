@@ -1,0 +1,17 @@
+{
+  "name": "filmcraft-studio",
+  "version": "0.1.0",
+  "description": "Edición de video en FilmCraft guiada por design systems de video y briefs de intención: montaje headless de punta a punta o asistido con puertas de confirmación",
+  "author": {
+    "name": "Juan"
+  },
+  "license": "MIT",
+  "keywords": [
+    "filmcraft",
+    "video",
+    "design-system",
+    "reels"
+  ],
+  "homepage": "https://github.com/juan52878911/filmcraft-studio",
+  "repository": "https://github.com/juan52878911/filmcraft-studio"
+}

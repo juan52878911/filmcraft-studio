@@ -1,0 +1,12 @@
+{
+  "name": "juan-local",
+  "owner": { "name": "Juan" },
+  "description": "Plugins locales de Juan",
+  "plugins": [
+    {
+      "name": "filmcraft-studio",
+      "source": "./plugins/filmcraft-studio",
+      "description": "Edición de video en FilmCraft guiada por design systems de video y briefs: modo headless y asistido"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.DS_Store
+._*
+FilmCraft Previews/
+*.fcproj
+*.wav.tmp
