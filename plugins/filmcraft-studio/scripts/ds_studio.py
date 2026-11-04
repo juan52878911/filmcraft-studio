@@ -118,6 +118,8 @@ def thumb(d):
     t = d / "thumb.png"
     if t.exists() and t.stat().st_mtime >= (d / "ds.json").stat().st_mtime:
         return t
+    if t.exists() and "promo" in jload(d / "ds.json"):   # DS de promo: su miniatura sale de un render real
+        return t
     from ds_preview import mock_content, mock_title
     ds = load_ds(d)
     a, b = mock_title(ds).resize((270, 480)), mock_content(ds, None).resize((270, 480))

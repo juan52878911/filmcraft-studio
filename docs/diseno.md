@@ -160,6 +160,28 @@ Trampas:
 - `~/.claude/skills/editor-filmcraft` quedaría duplicada: retirarla o renombrarla al instalar.
 - Herramientas MCP del plugin: `mcp__plugin_filmcraft-studio_filmcraft__*`.
 
+## Director generalista y motores (v0.2)
+
+El plugin ya no se limita a montar material de cámara. La skill `director-video` es la entrada para cualquier video: brief → tipo → guion por escenas con hechos y fuentes → DS → producción por escena → ensamblado en FilmCraft → verificación → entrega.
+
+- **FilmCraft es la mesa de montaje final.** Cualquier escena, venga del motor que venga, es una fuente con análisis (`--sin-vision` si no hay personas) y un bloque de `plan.json`. Así los subtítulos, la marca, los SFX, la música con ducking, el grade y la verificación son iguales para todos.
+- **Motores:**
+  - `camara`: el pipeline de siempre;
+  - `codigo`: Python, como en `promo/kindling-v0.20/`, o Remotion, HyperFrames o Manim;
+  - `pantalla`: VHS, Screen Studio o Cap;
+  - `ia`: solo relleno, de imagen a video y con permiso;
+  - `foto`, `tarjeta`, voz y música.
+- **Gramáticas de promo** (`temperatura@1`, `plano@1`, `riso@1`) en DS del catálogo:
+  - mismo esquema;
+  - pistas canónicas;
+  - la clave `promo` para el render por código;
+  - fondos propios (`promo_fondos.py`), kit de SFX (`promo_sfx.py`) y vista previa desde el render (`promo_preview.py`).
+- **Lo que destapó la prueba de ensamblado:**
+  - `apply_plan` necesita las pistas canónicas (`Main`, `Dialogue`…);
+  - las tarjetas usan los roles `tag`, `meta` y `pie` (ahora los exige `ds_validate.py`);
+  - el rol `cierre` necesita `x` a la izquierda;
+  - la música ya masterizada va con `sin_voz_db` = 0.
+
 ## MVP de esta iteración
 
 - **Headless completo** con el DS `sbg-brutalista-s5` escrito a mano, sobre el material del Reto. Sale en `06 - FilmCraft/auto/` y se compara con el reel manual: hojas, curva de LUFS, número de cortes y obligatorios cubiertos.

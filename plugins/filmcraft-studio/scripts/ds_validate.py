@@ -21,7 +21,7 @@ REQ = ["id", "gramatica", "lienzo", "paleta", "fuentes", "marca", "pistas", "rol
        "transiciones", "fondos", "mattes", "sfx", "musica", "grade", "audio", "estructura"]
 PAL = ["fondo", "oscuro", "claro", "acento1"]
 ANIMS = {"popIn", "wordReveal", "eco", "ninguna"}
-ROLES_MIN = ["marca", "subtitulo", "etiqueta", "eco", "pill", "titulo", "cierre"]
+ROLES_MIN = ["marca", "subtitulo", "etiqueta", "eco", "pill", "tag", "titulo", "cierre", "meta", "pie"]  # los que usan tarjeta y cierre
 
 
 def validate(ds):
