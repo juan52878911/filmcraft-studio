@@ -5,7 +5,8 @@ Uso: promo_fondos.py DS
 
 ds_assets.py genera fondos brutalistas (rejilla y bloques de color); las gramáticas de promo necesitan
 los suyos para que las tarjetas que pone FilmCraft (título, cierre) no desentonen con las escenas
-renderizadas por código: brasa con grano y viñeta, plano con rejilla de dibujo, riso con papel y semitono.
+renderizadas por código: brasa con grano y viñeta, plano con rejilla de dibujo, riso con papel y semitono, termo
+con papel y una forma fundida teñida con el gradient map.
 Sobrescribe assets/bg-*.png del DS al tamaño de su lienzo.
 """
 import math
@@ -67,7 +68,29 @@ def riso(ds, W, H, kind):
     return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8))
 
 
-GEN = {"temperatura": temperatura, "plano": plano, "riso": riso}
+def termo(ds, W, H, kind):
+    """Papel con una forma fundida (estrella o anillo) teñida con el mapa caliente; el grano va en grade.noise."""
+    from PIL import ImageFilter
+    from promo_gradmap import mapas, papel, tenir
+    m = Image.new("L", (W // 2, H // 2), 0)
+    d = ImageDraw.Draw(m)
+    s = min(W, H) / 1080
+    if kind == "plano":
+        F = np.zeros((H, W), np.float32)
+    else:
+        cx, cy = (W * 0.74, H * 0.9) if kind != "cap" else (W * 0.9, H * 0.1)
+        R = (680 if kind == "cierre" else 520) * s
+        pts = [(cx / 2 + (R if k % 2 == 0 else R * 0.48) / 2 * math.cos(0.2 + math.pi * k / 5 - math.pi / 2),
+                cy / 2 + (R if k % 2 == 0 else R * 0.48) / 2 * math.sin(0.2 + math.pi * k / 5 - math.pi / 2))
+               for k in range(11)]
+        d.line(pts, fill=255, width=int(50 * s), joint="curve")
+        soft = np.asarray(m.filter(ImageFilter.GaussianBlur(36 * s)), np.float32) / 255
+        F = np.asarray(Image.fromarray((np.clip(soft * 1.45, 0, 1) * 255).astype(np.uint8)).resize((W, H)),
+                       np.float32) / 255
+    return Image.fromarray(tenir(F, mapas(ds), papel(W, H)))
+
+
+GEN = {"temperatura": temperatura, "plano": plano, "riso": riso, "termo": termo}
 
 
 def main():

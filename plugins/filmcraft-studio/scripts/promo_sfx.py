@@ -2,7 +2,7 @@
 """Kit de SFX sintetizados (libres de derechos) para las gramáticas de promo por código.
 
 Uso: promo_sfx.py GRAMATICA DIR_SALIDA
-     GRAMATICA: temperatura | plano | riso
+     GRAMATICA: temperatura | plano | riso | termo
 
 Escribe un WAV por evento (48 kHz, estéreo, pico -3 dBFS) con los mismos sintetizadores que los
 promos de kindling v0.20 (promo/kindling-v0.20/audio_*.py), para que un DS de promo tenga su
@@ -149,6 +149,103 @@ def crackle(dur=4.0):
     return out + hp(rng.standard_normal(len(out)), 2000) * 0.015
 
 
+# ---------- termo: gradient map / cámara térmica ----------
+def heatwave():
+    """onda: bocanada de aire caliente (ruido que se abre y se cierra) con golpe grave."""
+    t = tt(0.9)
+    env = np.exp(-((t - 0.18) / 0.14) ** 2)
+    air = np.zeros(len(t))
+    n = rng.standard_normal(len(t))
+    for k in range(0, len(t), 480):  # filtro que sigue a la envolvente, por bloques de 10 ms
+        a = np.exp(-2 * np.pi * (300 + 5000 * env[k]) / SR)
+        acc = air[k - 1] if k else 0.0
+        for j in range(k, min(len(t), k + 480)):
+            acc = (1 - a) * n[j] + a * acc
+            air[j] = acc
+    thump = np.sin(2 * np.pi * np.cumsum(55 + 60 * np.exp(-t * 25)) / SR) * np.exp(-t * 9)
+    return np.tanh(air * env * 1.6 + thump * 0.8)
+
+
+def focus():
+    """calor_entra: ruido que baja de brillo, el desenfoque que se cierra."""
+    t = tt(0.4)
+    n = hp(rng.standard_normal(len(t)), 300)
+    out = np.zeros(len(t))
+    acc = 0.0
+    for j in range(len(t)):
+        a = np.exp(-2 * np.pi * (9000 * np.exp(-t[j] * 8) + 600) / SR)
+        acc = (1 - a) * n[j] + a * acc
+        out[j] = acc
+    return out * np.exp(-t * 6) * np.minimum(1, t / 0.01)
+
+
+def glass_bell(f=2093.0, dur=2.0):
+    t = tt(dur)
+    mod = np.sin(2 * np.pi * f * 3.5 * t) * 2.2 * np.exp(-t * 3)
+    return np.sin(2 * np.pi * f * t + mod) * np.exp(-t * 1.6) * np.minimum(1, t / 0.003)
+
+
+def frost():
+    """enfria: siseo que se apaga y un cristal agudo."""
+    t = tt(1.0)
+    return hp(rng.standard_normal(len(t)), 5000) * np.exp(-t * 4) * 0.5 + glass_bell(4186, 1.0) * 0.4
+
+
+def spark_fall(d=0.42):
+    """chispa: silbido que baja con chisporroteo fino."""
+    t = tt(d)
+    out = np.sin(2 * np.pi * np.cumsum(3200 - 2000 * (t / d) ** 2) / SR) * 0.15 * np.minimum(1, t / 0.02)
+    for _ in range(18):
+        i = rng.integers(0, len(out) - 300)
+        out[i:i + 200] += hp(rng.standard_normal(200), 4000) * rng.uniform(0.1, 0.4) * np.exp(-tt(200 / SR) * 200)
+    return out
+
+
+def ignition(d=1.4):
+    """ignicion: golpe grave, el fuego que ruge mientras sube el frente y chasquidos."""
+    t = tt(d)
+    n = rng.standard_normal(len(t))
+    roar = np.zeros(len(t))
+    acc = 0.0
+    for j in range(len(t)):
+        a = np.exp(-2 * np.pi * (200 + 6000 * min(1, t[j] / (d - 0.4)) ** 1.5) / SR)
+        acc = (1 - a) * n[j] + a * acc
+        roar[j] = acc
+    roar *= np.minimum(1, t / 0.05) * np.clip((d - t) / 0.4, 0, 1) * 0.9
+    for _ in range(int(d * 50)):
+        i = rng.integers(0, len(t) - 400)
+        roar[i:i + 300] += hp(rng.standard_normal(300), 2500) * rng.uniform(0.1, 0.6) * np.exp(-tt(300 / SR) * 120)
+    out = np.tanh(roar)
+    hw = heatwave()
+    out[: len(hw)] += hw * 0.8
+    return out
+
+
+def thump():
+    """golpe: corte seco en el beat."""
+    t = tt(0.4)
+    return np.tanh(np.sin(2 * np.pi * np.cumsum(50 + 90 * np.exp(-t * 30)) / SR) * np.exp(-t * 11) * 1.8)
+
+
+def scanner(d=1.0):
+    """escaner: un foco recorre el comando (barrido que sube y pitido)."""
+    t = tt(d)
+    sweep = np.sin(2 * np.pi * np.cumsum(600 + 1400 * t / d) / SR) * 0.25 * np.sin(np.pi * t / d) ** 2
+    return np.concatenate([sweep, np.sin(2 * np.pi * 1760 * tt(0.18)) * np.exp(-tt(0.18) * 18) * 0.5])
+
+
+def warm_chord():
+    """cierre: acorde cálido de sierras desafinadas (Fm9) con campana."""
+    t = tt(2.6)
+    s = np.zeros(len(t))
+    for m in (53, 56, 60, 63, 67):
+        for det in (-0.11, 0.0, 0.13):
+            ph = np.cumsum(np.full(len(t), 440 * 2 ** ((m + det - 69) / 12))) / SR
+            s += 2 * (ph % 1) - 1
+    s = lp(s / 15, 2600) * np.minimum(1, t / 0.05) * np.clip((2.6 - t) / 0.8, 0, 1)
+    return s + glass_bell(1568, 2.6) * 0.15
+
+
 KITS = {
     "temperatura": {"tecla": click, "barrido": whoosh, "gancho": impact, "cierre": bell_sting, "congelar": ice,
                     "despertar": ping, "riser": riser, "contador": tick, "titulo": whoosh},
@@ -156,6 +253,9 @@ KITS = {
               "gancho": stamp, "cierre": stamp, "despertar": ping, "medida": lambda: ping(1318), "riser": riser, "titulo": paper_slide},
     "riso": {"tecla": click, "imprenta": press, "gancho": press, "cierre": press, "hoja": slap,
              "rotulador": lambda: scribble(0.3), "congelar": tape_stop, "vinilo": crackle, "riser": riser, "titulo": slap},
+    "termo": {"tecla": click, "onda": heatwave, "gancho": heatwave, "enfoque": focus, "titulo": focus,
+              "congelar": frost, "despertar": heatwave, "cierre": warm_chord, "contador": tick, "riser": riser,
+              "chispa": spark_fall, "ignicion": ignition, "golpe": thump, "escaner": scanner},
 }
 
 

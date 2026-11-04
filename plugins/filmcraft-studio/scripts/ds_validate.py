@@ -20,7 +20,7 @@ from ds_from_image import contrast  # noqa: E402
 REQ = ["id", "gramatica", "lienzo", "paleta", "fuentes", "marca", "pistas", "roles_texto", "animaciones",
        "transiciones", "fondos", "mattes", "sfx", "musica", "grade", "audio", "estructura"]
 PAL = ["fondo", "oscuro", "claro", "acento1"]
-ANIMS = {"popIn", "wordReveal", "eco", "ninguna"}
+ANIMS = {"popIn", "wordReveal", "eco", "calorEntra", "ninguna"}
 ROLES_MIN = ["marca", "subtitulo", "etiqueta", "eco", "pill", "tag", "titulo", "cierre", "meta", "pie"]  # los que usan tarjeta y cierre
 
 

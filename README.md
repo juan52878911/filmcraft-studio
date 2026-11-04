@@ -86,7 +86,7 @@ Los primeros videos hechos con el motor `codigo` (skill `promo-codigo`):
 - la música y los SFX se sintetizan en esa misma rejilla, sin licencias;
 - el máster va a −14 LUFS.
 
-Cada estilo es un design system del catálogo, con su gramática, su kit de SFX y sus fondos. El código completo y reproducible está en [`promo/kindling-v0.20/`](plugins/filmcraft-studio/promo/kindling-v0.20) (`./render.sh brasa|blueprint|riso|riso_v`).
+Cada estilo es un design system del catálogo, con su gramática, su kit de SFX y sus fondos. El código completo y reproducible está en [`promo/kindling-v0.20/`](plugins/filmcraft-studio/promo/kindling-v0.20) (`./render.sh brasa|blueprint|riso|riso_v|gradmap_v`).
 
 **`promo-brasa-escarcha`** · temperatura@1 · 16:9 · UK garage. Lo que corre es brasa; lo congelado se vuelve escarcha, y la cámara y el grano se paran. [Ver video](docs/video/promo-brasa-escarcha.mp4)
 
@@ -99,6 +99,10 @@ Cada estilo es un design system del catálogo, con su gramática, su kit de SFX 
 **`promo-riso`** · riso@1 · 9:16 y 16:9 · breakbeat lo-fi. Dos tintas multiplicadas sobre papel; congelado = una sola tinta y la cinta frena. [Ver vertical](docs/video/promo-riso-9x16.mp4) · [ver 16:9](docs/video/promo-riso-16x9.mp4)
 
 <img src="docs/img/promo/promo-riso-9x16.png" alt="Fotogramas del promo vertical de kindling en risografía" width="100%">
+
+**`promo-gradient-map`** · termo@1 · 9:16 · UK garage con pads cálidos. Imagen térmica de una impresión mal registrada: la temperatura es del lugar, no de la letra. Cada escena pone fuentes de calor; lejos de ellas, las letras quedan nítidas con un filo rojo, y cerca, el halo sale corrido y el núcleo se funde. Arranca en oscuro: una chispa enciende un frente de llama que sube y revela el papel. Las cifras y las formas van a sangre, cada idea tiene su maqueta y los cambios de escena son cortes secos; solo la llama y el hielo hacen de transición. Congelar enfría las letras hasta el filo, y el cierre acaba congelado. `promo_gradmap.py --fuente` aplica el look a cualquier video. [Ver video](docs/video/promo-gradient-map-9x16.mp4)
+
+<img src="docs/img/promo/promo-gradient-map-9x16.png" alt="Fotogramas del promo vertical de kindling en gradient map" width="100%">
 
 **Ensamblado en FilmCraft.** Prueba headless con [`promo/kindling-v0.20/ensamblado/`](plugins/filmcraft-studio/promo/kindling-v0.20/ensamblado):
 - el gancho, renderizado en brasa, y la demo, renderizada en blueprint, entran como fuentes;
@@ -187,13 +191,14 @@ plugins/filmcraft-studio/
 ├── commands/                  video · promo · editar · montar · ds-crear · ds-listar · ds-preview · analizar · brief · verificar · nota · entregar
 ├── scripts/                   fcengine · fcstyle · plan_compile · apply_plan · verify · report · analyze_media · freezones ·
 │                              ds_studio · ds_from_image · ds_assets · ds_preview · ds_validate · music_bed · palmier/…
-│                              promo_fondos · promo_sfx · promo_preview
+│                              promo_fondos · promo_sfx · promo_preview · promo_gradmap
 ├── promo/kindling-v0.20/      promo de ejemplo en tres estilos (VHS + Python + ffmpeg) y su ensamblado en FilmCraft
 └── design-systems/
     ├── sbg-brutalista-s5/     DS de ejemplo completo: fondos, mattes y SFX sintetizados libres de derechos
     ├── promo-brasa-escarcha/  temperatura@1 · 16:9
     ├── promo-blueprint/       plano@1 · 16:9
-    └── promo-riso/            riso@1 · 9:16
+    ├── promo-riso/            riso@1 · 9:16
+    └── promo-gradient-map/    termo@1 · 9:16
 ```
 
 Lo que aprende el plugin sobre las trampas de FilmCraft queda escrito en [`filmcraft-operativa.md`](plugins/filmcraft-studio/skills/editor-filmcraft/references/filmcraft-operativa.md). Algunos ejemplos:

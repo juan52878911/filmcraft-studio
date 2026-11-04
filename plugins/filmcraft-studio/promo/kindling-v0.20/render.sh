@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 # Renderiza un estilo del promo de kindling v0.20 de punta a punta.
-# Uso: ./render.sh brasa|blueprint|riso|riso_v [salida.mp4]
+# Uso: ./render.sh brasa|blueprint|riso|riso_v|gradmap_v [salida.mp4]
 # Necesita: vhs, ffmpeg, python3 con numpy y Pillow, y un daemon de kling con la imagen redis:7-alpine.
 set -euo pipefail
 cd "$(dirname "$0")"
-estilo=${1:?estilo: brasa, blueprint, riso o riso_v}
+estilo=${1:?estilo: brasa, blueprint, riso, riso_v o gradmap_v}
 out=${2:-kindling-v0.20-$estilo.mp4}
 build=${BUILD_DIR:-build}
 mkdir -p "$build"
 
 case $estilo in
   riso_v) tape=term_v.tape; term=term_v.mp4; video=riso_v.py; audio=audio_riso_v.py ;;
+  gradmap_v) tape=term_v.tape; term=term_v.mp4; video=gradmap_v.py; audio=audio_gradmap_v.py ;;
   brasa)  tape=term.tape;   term=term.mp4;   video=brasa.py;  audio=audio_brasa.py ;;
   *)      tape=term.tape;   term=term.mp4;   video=$estilo.py; audio=audio_$estilo.py ;;
 esac

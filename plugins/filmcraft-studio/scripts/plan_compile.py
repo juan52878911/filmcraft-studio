@@ -250,7 +250,7 @@ class Compiler:
                 if t["rol"] == "eco":
                     for k in range(len(r["colores"])):
                         sfx.append(self.ev(r.get("sfx", "blip"), item["start"] + k * (self.bf(r.get("frames", 8)) + self.bf(2)), bid))
-                elif r.get("anim") == "popIn" and r.get("sfx") and t.get("sfx", True):
+                elif r.get("anim") in ("popIn", "calorEntra") and r.get("sfx") and t.get("sfx", True):
                     sfx.append(self.ev(r["sfx"], item["start"], bid))
             for e in b.get("sfx", []):
                 sfx.append(self.ev(e["tipo"], Tb + e.get("t", 0), bid, e.get("db")))
