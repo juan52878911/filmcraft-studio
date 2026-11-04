@@ -172,7 +172,10 @@ class Compiler:
                 T += d
             segs += bsegs
             Te = T
-            blocks_out.append({"id": bid, "tipo": tipo, "start": round(Tb, 4), "end": round(Te, 4),
+            # ¿hay voz en el bloque? (palabras dentro de algún plano con audio): decide si la música se agacha
+            voz = any(s["tipo"] == "video" and not s["mute"] and
+                      any(w["s"] < s["out"] and w["e"] > s["in"] for w in self.words(s["stem"])) for s in bsegs)
+            blocks_out.append({"id": bid, "tipo": tipo, "start": round(Tb, 4), "end": round(Te, 4), "voz": voz,
                                "segs": [s["id"] for s in bsegs], "resumen": b.get("resumen", "")})
             # textos por defecto de tarjeta y cierre
             tx = list(b.get("textos", []))
@@ -409,7 +412,7 @@ class Compiler:
         kfs = []
         ramp = m.get("rampa_s", 0.4)
         for b in blocks:
-            lvl = m["sin_voz_db"] if b["tipo"] in ("tarjeta", "titulo", "cierre", "fotos") else m["bajo_voz_db"]
+            lvl = m["bajo_voz_db"] if b.get("voz", b["tipo"] not in ("tarjeta", "titulo", "cierre", "fotos")) else m["sin_voz_db"]
             kfs.append([round(b["start"], 3), lvl])
             kfs.append([round(max(b["start"], b["end"] - ramp), 3), lvl])
         kfs.append([round(total - m.get("salida_s", 1.5), 3), kfs[-1][1] if kfs else m["sin_voz_db"]])
