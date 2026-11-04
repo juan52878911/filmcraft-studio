@@ -29,6 +29,20 @@ python3 $S/ds_studio.py aprobar <id>                            # valida y pasa 
 - **Ciclo**: cada `modificar` sube `estado.iteracion` y guarda el cambio. No apruebes por el usuario: `aprobar` solo cuando lo diga. `aprobar` falla si `ds_validate.py` da errores (contraste < 2,5:1, fuente no instalada, assets que faltan).
 - Borradores en `<datos>/borradores/`, catálogo en `<datos>/design-systems/` (`<datos>` = `${CLAUDE_PLUGIN_DATA}` o `~/.cache/filmcraft-studio`; otra carpeta con `FILMCRAFT_DS_CATALOGO`). Modificar uno aprobado crea un borrador; al reaprobarlo, la versión anterior se guarda como `<id>.anterior-<fecha>`.
 
+## DS de promo (render por código)
+
+`promo-brasa-escarcha` (temperatura@1, 16:9), `promo-blueprint` (plano@1, 16:9) y `promo-riso` (riso@1, 9:16 y 16:9) sirven para promos de repos y lanzamientos (skill `promo-codigo`).
+- **Mismo esquema**: valen para FilmCraft, con pistas canónicas, roles, tarjetas, SFX y grade.
+- **Clave `promo`**: lo que usa el render por código (BPM, firma, cámara, tintas).
+- **Música ya masterizada**: el motor de código la entrega a −14 LUFS, así que `musica.sin_voz_db` = 0.
+
+Herramientas propias:
+- `promo_fondos.py <id>`: fondos de tarjeta con la piel de la gramática.
+- `promo_sfx.py <gramatica> <dir>`: kit de SFX sintetizado.
+- `promo_preview.py <id> <video>`: vista previa desde un render real, en lugar de las maquetas PIL.
+
+Reglas de cada gramática: `promo-codigo/references/gramaticas.md`.
+
 ## Adaptar un DS
 
 Copia la carpeta, cambia `id`, `nombre`, `paleta` o `marca`, y regenera los fondos con `ds_assets.py <id>`. No toques la gramática sin una razón de oficio (`editor-filmcraft/references/estilo-brutalista.md`).

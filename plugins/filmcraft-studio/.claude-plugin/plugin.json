@@ -1,7 +1,7 @@
 {
   "name": "filmcraft-studio",
-  "version": "0.1.0",
-  "description": "Edición de video en FilmCraft guiada por design systems de video y briefs de intención: montaje headless de punta a punta o asistido con puertas de confirmación",
+  "version": "0.2.0",
+  "description": "Director de video para Claude Code: de un pedido a brief, guion por escenas y design system, con cada escena producida por su motor (FilmCraft, render por código, pantalla, IA, voz y música) y ensamblada y verificada en FilmCraft",
   "author": {
     "name": "Juan"
   },
@@ -10,7 +10,10 @@
     "filmcraft",
     "video",
     "design-system",
-    "reels"
+    "reels",
+    "guion",
+    "promo",
+    "motion"
   ],
   "homepage": "https://github.com/juan52878911/filmcraft-studio",
   "repository": "https://github.com/juan52878911/filmcraft-studio"

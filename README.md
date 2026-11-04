@@ -62,6 +62,55 @@ Compilar y aplicar el plan tarda unos 4 s; la verificación, menos de 1 min. El 
   <br><sub>Vista previa del DS precargado <code>sbg-brutalista-s5</code>: maquetas PIL, dos renders reales de FilmCraft, el flyer de referencia y la paleta con sus contrastes.</sub>
 </p>
 
+## Director de video: cualquier tipo de video
+
+Desde la 0.2, la entrada general es `/filmcraft-studio:video <qué quieres>` (skill `director-video`). Sirve para un promo de repo o de una release, un lanzamiento, una demo, un tutorial, un explainer, un reel de evento, una entrevista, un short, un pitch, un changelog o un loop para el README. Todos siguen la misma cadena:
+
+1. **Brief y tipo.** Cada tipo trae su plantilla de escenas, su duración y su formato ([`tipos.md`](plugins/filmcraft-studio/skills/director-video/references/tipos.md)).
+2. **Hechos con fuente y `guion.json`.** Escenas con objetivo, texto en pantalla, voz, motor y beats ([`guion.md`](plugins/filmcraft-studio/skills/director-video/references/guion.md)).
+3. **Design system.** Del catálogo o nuevo, con fotogramas fijos para elegir.
+4. **Producción por escena**, cada una con su motor ([`motores.md`](plugins/filmcraft-studio/skills/director-video/references/motores.md)):
+   - `camara`: material grabado, con análisis;
+   - `codigo`: render reproducible con Python, Remotion, HyperFrames o Manim;
+   - `pantalla`: VHS, Screen Studio o Cap;
+   - `ia`: solo planos de relleno, desde imagen propia;
+   - `foto`, `tarjeta`, voz y música.
+5. **Ensamblado en FilmCraft.** Todas las escenas entran como fuentes del mismo `plan.json`; FilmCraft pone los subtítulos, la marca, los SFX, la música con ducking y el grade del DS.
+6. **Verificación** con el listón profesional ([`reglas.md`](plugins/filmcraft-studio/skills/director-video/references/reglas.md)), `verify.py` y el agente crítico.
+
+### Promos por código: kindling v0.20 en tres estilos
+
+Los primeros videos hechos con el motor `codigo` (skill `promo-codigo`):
+- la terminal es una **grabación real** con VHS, no una UI inventada;
+- cada fotograma se dibuja con Python sobre una rejilla de 134 BPM;
+- la música y los SFX se sintetizan en esa misma rejilla, sin licencias;
+- el máster va a −14 LUFS.
+
+Cada estilo es un design system del catálogo, con su gramática, su kit de SFX y sus fondos. El código completo y reproducible está en [`promo/kindling-v0.20/`](plugins/filmcraft-studio/promo/kindling-v0.20) (`./render.sh brasa|blueprint|riso|riso_v`).
+
+**`promo-brasa-escarcha`** · temperatura@1 · 16:9 · UK garage. Lo que corre es brasa; lo congelado se vuelve escarcha, y la cámara y el grano se paran. [Ver video](docs/video/promo-brasa-escarcha.mp4)
+
+<img src="docs/img/promo/promo-brasa-escarcha.png" alt="Fotogramas del promo de kindling en estilo brasa y escarcha" width="100%">
+
+**`promo-blueprint`** · plano@1 · 16:9 · electrónica ambiental con lápiz y sellos. Un plano técnico que se dibuja solo, con cotas, anotaciones numeradas y rayado de sección al congelar. [Ver video](docs/video/promo-blueprint.mp4)
+
+<img src="docs/img/promo/promo-blueprint.png" alt="Fotogramas del promo de kindling en estilo blueprint" width="100%">
+
+**`promo-riso`** · riso@1 · 9:16 y 16:9 · breakbeat lo-fi. Dos tintas multiplicadas sobre papel; congelado = una sola tinta y la cinta frena. [Ver vertical](docs/video/promo-riso-9x16.mp4) · [ver 16:9](docs/video/promo-riso-16x9.mp4)
+
+<img src="docs/img/promo/promo-riso-9x16.png" alt="Fotogramas del promo vertical de kindling en risografía" width="100%">
+
+**Ensamblado en FilmCraft.** Prueba headless con [`promo/kindling-v0.20/ensamblado/`](plugins/filmcraft-studio/promo/kindling-v0.20/ensamblado):
+- el gancho, renderizado en brasa, y la demo, renderizada en blueprint, entran como fuentes;
+- el cierre es la tarjeta del DS;
+- la música es la mezcla del motor de código.
+
+Resultado: 15,5 s, 0 choques de texto, 0 cortes dentro de palabra y 0 keyframes fuera de rango. Mezcla a −17,9 LUFS con pico de −1,3 dBTP: queda por debajo del objetivo de −14 y conviene normalizar al entregar.
+
+<img src="docs/img/promo/ensamblado-filmcraft.jpg" alt="Hoja de fotogramas renderizada por FilmCraft del ensamblado de escenas por código" width="100%">
+
+Lo aprendido al hacerlos está en [`aprendido.md`](plugins/filmcraft-studio/skills/promo-codigo/references/aprendido.md): por qué un promo se ve genérico, qué funciona, música y licencias, cómo verificar las afirmaciones y los errores que detecta la hoja de fotogramas.
+
 ## Cómo funciona
 
 ```mermaid
@@ -111,7 +160,9 @@ claude plugin install filmcraft-studio@juan-local --scope user
 
 | Comando | Para qué |
 |---|---|
-| `/filmcraft-studio:editar <carpeta>` | **Entrada principal.** Pregunta qué quieres ver y sigue el orden estilo → intenciones → edición (asistida o automática) |
+| `/filmcraft-studio:video <qué video quieres>` | **Entrada general.** Brief → tipo → guion → DS → producción por motores → ensamblado y verificación en FilmCraft |
+| `/filmcraft-studio:promo <repo>` | Promo de un repo o de su última versión, renderizado por código con un DS `promo-*` |
+| `/filmcraft-studio:editar <carpeta>` | **Montaje de material grabado.** Pregunta qué quieres ver y sigue el orden estilo → intenciones → edición (asistida o automática) |
 | `/filmcraft-studio:montar <carpeta> --modo headless` | De punta a punta y sin preguntas. Termina con `informe.md` |
 | `/filmcraft-studio:montar <carpeta> --modo asistido` | En la app abierta, con puertas: G1 estilo, G2 brief, G3 estrategia, G4 cada bloque en vivo |
 | `/filmcraft-studio:ds-crear <descripción o flyer>` | Crea un design system con vista previa y ciclo de aprobar o modificar |
@@ -125,17 +176,24 @@ También vale pedirlo en lenguaje natural, por ejemplo: «edita el reel del even
 ```
 plugins/filmcraft-studio/
 ├── skills/
+│   ├── director-video/        entrada general: tipos de video, guion por escenas, motores, listón profesional
+│   ├── promo-codigo/          motor de render por código: gramáticas de promo y lo aprendido
 │   ├── editor-filmcraft/      el oficio: criterio de montaje, color, audio, transiciones con la cámara, reglas duras
 │   ├── design-system-video/   catálogo y ciclo crear → vista previa → modificar → aprobar
 │   ├── brief-video/           intenciones con origen y confianza
 │   ├── montaje-headless/      pipeline autónomo y formato de plan.json
 │   └── montaje-asistido/      puertas G0–G7 en la app
 ├── agents/                    analista-material · director-montaje · critico
-├── commands/                  editar · montar · ds-crear · ds-listar · ds-preview · analizar · brief · verificar · nota · entregar
+├── commands/                  video · promo · editar · montar · ds-crear · ds-listar · ds-preview · analizar · brief · verificar · nota · entregar
 ├── scripts/                   fcengine · fcstyle · plan_compile · apply_plan · verify · report · analyze_media · freezones ·
 │                              ds_studio · ds_from_image · ds_assets · ds_preview · ds_validate · music_bed · palmier/…
+│                              promo_fondos · promo_sfx · promo_preview
+├── promo/kindling-v0.20/      promo de ejemplo en tres estilos (VHS + Python + ffmpeg) y su ensamblado en FilmCraft
 └── design-systems/
-    └── sbg-brutalista-s5/     DS de ejemplo completo: fondos, mattes y SFX sintetizados libres de derechos
+    ├── sbg-brutalista-s5/     DS de ejemplo completo: fondos, mattes y SFX sintetizados libres de derechos
+    ├── promo-brasa-escarcha/  temperatura@1 · 16:9
+    ├── promo-blueprint/       plano@1 · 16:9
+    └── promo-riso/            riso@1 · 9:16
 ```
 
 Lo que aprende el plugin sobre las trampas de FilmCraft queda escrito en [`filmcraft-operativa.md`](plugins/filmcraft-studio/skills/editor-filmcraft/references/filmcraft-operativa.md). Algunos ejemplos:
@@ -151,6 +209,6 @@ El diseño completo está en [`docs/diseno.md`](docs/diseno.md).
 
 La skill `editor-filmcraft` adapta ideas de tres proyectos MIT: [wonsukchoi/domain-experts](https://github.com/wonsukchoi/domain-experts), [samuelgursky/davinci-resolve-mcp](https://github.com/samuelgursky/davinci-resolve-mcp) y [browser-use/video-use](https://github.com/browser-use/video-use). Las atribuciones completas están en [`NOTICE.md`](plugins/filmcraft-studio/skills/editor-filmcraft/NOTICE.md).
 
-Las recetas propias (estilo brutalista del AWS SBG EAN, transiciones con el movimiento de la cámara, operativa de FilmCraft y scripts) son de Juan Bedoya, escritas junto con Claude.
+Las recetas propias (estilo brutalista del AWS SBG EAN, gramáticas de promo, transiciones con el movimiento de la cámara, operativa de FilmCraft y scripts) son de Juan Bedoya, escritas junto con Claude.
 
 Licencia [MIT](LICENSE).

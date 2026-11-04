@@ -6,7 +6,7 @@
     {
       "name": "filmcraft-studio",
       "source": "./plugins/filmcraft-studio",
-      "description": "Edición de video en FilmCraft guiada por design systems de video y briefs: modo headless y asistido"
+      "description": "Director de video: brief, guion, design systems y producción por motores, ensamblada en FilmCraft (headless y asistido)"
     }
   ]
 }

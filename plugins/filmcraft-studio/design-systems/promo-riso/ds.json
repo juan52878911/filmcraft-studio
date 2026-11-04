@@ -1,0 +1,437 @@
+{
+ "id": "promo-riso",
+ "nombre": "Promo de repo · risografía (kindling v0.20)",
+ "version": 1,
+ "gramatica": "riso@1",
+ "descripcion": "Promo 9:16 (y 16:9) impreso en risografía: dos tintas, rosa flúor y azul, multiplicadas sobre papel con el registro desplazado; semitono, animación a 15 fps con temblor de stop-motion, círculos y tachones a mano. Congelado = una sola tinta: la pasada rosa se detiene, entra semitono azul y la cinta frena.",
+ "match": {
+  "rutas": [
+   "kindling",
+   "promo"
+  ],
+  "palabras": [
+   "kindling",
+   "kling",
+   "microVM",
+   "Firecracker",
+   "release",
+   "repositorio"
+  ],
+  "paleta_ref": [
+   "#F4EFE4",
+   "#F4EFE4",
+   "#E0168C",
+   "#0078BF",
+   "#FF48B0"
+  ]
+ },
+ "lienzo": {
+  "ancho": 1080,
+  "alto": 1920,
+  "fps": 30,
+  "plataforma": "reels-shorts-tiktok"
+ },
+ "paleta": {
+  "fondo": "#F4EFE4",
+  "rejilla": "#E2DACA",
+  "oscuro": "#005A8F",
+  "claro": "#F4EFE4",
+  "acento1": "#E0168C",
+  "acento2": "#0078BF",
+  "acento3": "#FF48B0"
+ },
+ "fuentes": {
+  "titular": {
+   "familia": "Helvetica Neue",
+   "estilo": "Condensed Black",
+   "archivo": "/System/Library/Fonts/HelveticaNeue.ttc"
+  },
+  "ui": {
+   "familia": "IosevkaTerm Nerd Font Mono",
+   "estilo": "Bold",
+   "archivo": "~/Library/Fonts/IosevkaTermNerdFontMono-Bold.ttf"
+  },
+  "meta": {
+   "familia": "IosevkaTerm Nerd Font Mono",
+   "estilo": "Bold",
+   "archivo": "~/Library/Fonts/IosevkaTermNerdFontMono-Bold.ttf"
+  }
+ },
+ "marca": {
+  "barra": "kindling v0.20",
+  "handle": "github.com/juan52878911/kindling",
+  "hashtag": "#kindling",
+  "cta": "kling upgrade",
+  "titulo": "DOCKER COMPOSE.\nEN MICROVMS.\nEN TU MAC.",
+  "titulo_pill": "kindling v0.20",
+  "cierre_palabras": [
+   "KINDLING",
+   "v0.20"
+  ],
+  "cierre_linea": "microVMs que se congelan cuando nadie las usa",
+  "cierre_pie": "github.com/juan52878911/kindling"
+ },
+ "pistas": {
+  "video": [
+   "Fondo",
+   "Main",
+   "Tarjeta",
+   "Producto",
+   "Brand",
+   "Captions",
+   "Labels",
+   "Pills",
+   "Tags",
+   "Eco",
+   "Mattes"
+  ],
+  "audio": [
+   "Dialogue",
+   "Hits",
+   "SFX",
+   "Music",
+   "SFX 2"
+  ],
+  "sfx": [
+   "SFX",
+   "SFX 2",
+   "Hits"
+  ]
+ },
+ "roles_texto": {
+  "marca": {
+   "fuente": "ui",
+   "tam": 46,
+   "color": "oscuro",
+   "fondo": null,
+   "pista": "Brand",
+   "pos": [
+    0.1,
+    0.1
+   ],
+   "align": "Left",
+   "anim": "ninguna"
+  },
+  "subtitulo": {
+   "fuente": "titular",
+   "tam": 64,
+   "color": "oscuro",
+   "fondo": null,
+   "pista": "Captions",
+   "pos": [
+    0.5,
+    0.86
+   ],
+   "align": "Center",
+   "anim": "popIn",
+   "max_chars": 32
+  },
+  "etiqueta": {
+   "fuente": "titular",
+   "tam": 62,
+   "color": "oscuro",
+   "fondo": null,
+   "pista": "Labels",
+   "zona": "libre",
+   "align": "Left",
+   "anim": "popIn",
+   "sfx": "despertar"
+  },
+  "eco": {
+   "fuente": "titular",
+   "tam": 150,
+   "colores": [
+    [
+     "oscuro",
+     "fondo"
+    ],
+    [
+     "acento1",
+     "fondo"
+    ]
+   ],
+   "pista": "Labels",
+   "zona": "libre",
+   "align": "Left",
+   "anim": "eco",
+   "frames": 6,
+   "paso_y": 0.1
+  },
+  "pill": {
+   "fuente": "ui",
+   "tam": 46,
+   "color": "oscuro",
+   "fondo": null,
+   "pista": "Pills",
+   "align": "Left",
+   "anim": "ninguna"
+  },
+  "titulo": {
+   "fuente": "titular",
+   "tam": 212,
+   "color": "oscuro",
+   "fondo": null,
+   "pista": "Labels",
+   "x": 0.094,
+   "y": 0.3,
+   "interlinea": 0.9,
+   "max_chars": 16,
+   "align": "Left",
+   "anim": "wordReveal"
+  },
+  "cierre": {
+   "fuente": "titular",
+   "tam": 302,
+   "color": "acento1",
+   "fondo": null,
+   "pista": "Labels",
+   "x": 0.094,
+   "y": 0.32,
+   "interlinea": 1.0,
+   "align": "Left",
+   "anim": "wordReveal",
+   "sfx": "cierre"
+  },
+  "cifra": {
+   "fuente": "titular",
+   "tam": 400,
+   "color": "acento1",
+   "fondo": null,
+   "pista": "Labels",
+   "x": 0.094,
+   "y": 0.55,
+   "align": "Left",
+   "anim": "popIn",
+   "sfx": "contador"
+  },
+  "comando": {
+   "fuente": "ui",
+   "tam": 50,
+   "color": "oscuro",
+   "fondo": null,
+   "pista": "Labels",
+   "zona": "libre",
+   "align": "Left",
+   "anim": "ninguna",
+   "sfx": "tecla"
+  },
+  "meta": {
+   "fuente": "meta",
+   "tam": 30,
+   "color": "oscuro",
+   "fondo": null,
+   "pista": "Tags",
+   "align": "Left",
+   "anim": "ninguna"
+  },
+  "tag": {
+   "fuente": "ui",
+   "tam": 46,
+   "color": "oscuro",
+   "fondo": null,
+   "pista": "Tags",
+   "align": "Left",
+   "anim": "ninguna"
+  },
+  "pie": {
+   "fuente": "ui",
+   "tam": 30,
+   "color": "oscuro",
+   "fondo": null,
+   "pista": "Eco",
+   "pos": [
+    0.5,
+    0.9
+   ],
+   "align": "Center",
+   "anim": "ninguna"
+  }
+ },
+ "animaciones": {
+  "base_fps": 30,
+  "popIn": {
+   "escala": [
+    [
+     0,
+     130
+    ],
+    [
+     8,
+     96
+    ],
+    [
+     12,
+     100
+    ]
+   ],
+   "opacidad": [
+    [
+     0,
+     0
+    ],
+    [
+     3,
+     100
+    ]
+   ]
+  },
+  "wordReveal": {
+   "paso_f": 7,
+   "fade_f": 7,
+   "dy": 60
+  },
+  "eco": {
+   "frames": 6
+  }
+ },
+ "continuidad": {
+  "entrada": {
+   "escala": [
+    104,
+    100
+   ],
+   "f": 10,
+   "fade_f": 0
+  },
+  "jump_cut": {
+   "punch": 106
+  },
+  "salida": {
+   "escala": [
+    100,
+    100
+   ],
+   "f": 0
+  },
+  "zoom_crash": {
+   "escala": [
+    100,
+    120
+   ],
+   "f": 6
+  }
+ },
+ "transiciones": {
+  "preferencia": [
+   "corte"
+  ],
+  "corte": {}
+ },
+ "fondos": {
+  "titulo": "assets/bg-title.png",
+  "plano": "assets/bg-plain.png",
+  "cap": "assets/bg-cap.png",
+  "cierre": "assets/bg-outro.png"
+ },
+ "mattes": {
+  "blanco": "assets/matte-blanco.png",
+  "acento1": "assets/matte-acento1.png",
+  "acento2": "assets/matte-acento2.png",
+  "acento3": "assets/matte-acento3.png"
+ },
+ "sfx": {
+  "dir": "assets/sfx",
+  "nivel_db": -6,
+  "mapa": {
+   "tecla": "tecla.wav",
+   "imprenta": "imprenta.wav",
+   "gancho": "gancho.wav",
+   "cierre": "cierre.wav",
+   "hoja": "hoja.wav",
+   "rotulador": "rotulador.wav",
+   "congelar": "congelar.wav",
+   "vinilo": "vinilo.wav",
+   "riser": "riser.wav",
+   "titulo": "titulo.wav"
+  }
+ },
+ "musica": {
+  "generador": "promo/kindling-v0.20/audio_riso_v.py",
+  "bpm": 134,
+  "genero": "breakbeat lo-fi con piano eléctrico, vinilo y saturación de cinta",
+  "bajo_voz_db": -10,
+  "sin_voz_db": 0,
+  "rampa_s": 0.3,
+  "salida_s": 0.8,
+  "nota": "la música del motor de código ya sale masterizada a -14 LUFS: sin voz va a 0 dB"
+ },
+ "grade": {
+  "noise": {
+   "amount": 5,
+   "color": false
+  }
+ },
+ "audio": {
+  "lufs": -14,
+  "pico_dbtp": -1,
+  "fade_corte_f": 2,
+  "dialogo_db": 0
+ },
+ "estructura": {
+  "duracion_s": [
+   20,
+   30
+  ],
+  "orden": [
+   "gancho",
+   "demo_real",
+   "plataforma",
+   "capacidades",
+   "ecosistema",
+   "cierre"
+  ],
+  "gancho_s": [
+   3,
+   4
+  ],
+  "titulo_s": 2,
+  "cierre_s": 3,
+  "foto_f": 0,
+  "fotos_max": 0
+ },
+ "ritmo": {
+  "plano_s": [
+   1.3,
+   9
+  ],
+  "margen_corte_ms": [
+   0,
+   40
+  ],
+  "energia": "alta"
+ },
+ "zonas": {
+  "evitar_y": [
+   [
+    0.74,
+    1
+   ]
+  ],
+  "margen": 0.055,
+  "y_min_bloque": 0.08
+ },
+ "vocabulario": "kindling, kling, microVM, Firecracker, Apple Silicon, kling-hv, compose, MCP, HOL Guard",
+ "promo": {
+  "motor": "código: VHS + Python (PIL, numpy) + ffmpeg; ejemplo en promo/kindling-v0.20/",
+  "bpm": 134,
+  "rejilla": "todo evento cae en un beat; escenas en compases de 4 beats",
+  "material_real": "la terminal es una grabación real con VHS; nunca UI inventada por IA",
+  "timeline": "timeline.py: escenas en beats y REMAP salida->fuente para que cada resultado real caiga en un beat",
+  "firma": "una sola tinta = congelado: la pasada rosa no imprime, semitono azul parejo, temblor y grano quietos, tape stop",
+  "tintas": {
+   "rosa": "#FF48B0",
+   "azul": "#0078BF",
+   "papel": "#F4EFE4",
+   "registro_px": [
+    7,
+    -4
+   ],
+   "golpe_registro_px": [
+    34,
+    -20
+   ]
+  },
+  "animacion": "a dos (15 fps), temblor ±2 px por pasada",
+  "vertical": "titulares ajustados al ancho (fit), franja de rótulos abajo (y > 0.74) y cámara que deja la fila enfocada en y≈0.4"
+ }
+}

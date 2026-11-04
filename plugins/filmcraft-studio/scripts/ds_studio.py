@@ -74,7 +74,9 @@ def apply_spec(ds, spec):
         ds["ritmo"]["energia"] = {"suave": "baja", "normal": "media", "energica": "alta"}[tono.replace("é", "e")]
     pal = spec.get("paleta", {})
     if "fondo" in pal:
-        pal.setdefault("oscuro", pal["fondo"])
+        f = pal["fondo"]
+        claro_fondo = sum(int(f[i:i + 2], 16) for i in (1, 3, 5)) / 765 > 0.5
+        pal.setdefault("oscuro", "#1A1A1F" if claro_fondo else f)   # con fondo claro, "oscuro" tiene que ser oscuro de verdad
         if "rejilla" not in pal:
             f, c = pal["fondo"], pal.get("claro", ds["paleta"]["claro"])
             pal["rejilla"] = "#%02X%02X%02X" % tuple(round(int(f[i:i + 2], 16) * 0.92 + int(c[i:i + 2], 16) * 0.08) for i in (1, 3, 5))
@@ -117,6 +119,8 @@ def thumb(d):
     """Miniatura 9:16 (maqueta de título PIL) para el catálogo."""
     t = d / "thumb.png"
     if t.exists() and t.stat().st_mtime >= (d / "ds.json").stat().st_mtime:
+        return t
+    if t.exists() and "promo" in jload(d / "ds.json"):   # DS de promo: su miniatura sale de un render real
         return t
     from ds_preview import mock_content, mock_title
     ds = load_ds(d)
@@ -190,6 +194,8 @@ def main():
             d.mkdir(parents=True)
             ds = jload(src / "ds.json")
             (d / "assets").mkdir()                            # fondos y mattes se regeneran con la paleta nueva
+            if (src / "assets" / "sfx").is_dir():             # los SFX no dependen de la paleta: se heredan del base
+                shutil.copytree(src / "assets" / "sfx", d / "assets" / "sfx")
             ds["id"] = a.id
             ds["derivado_de"] = {"base": ds.get("id"), "descripcion": True}
             jsave(d / "ds.json", ds)

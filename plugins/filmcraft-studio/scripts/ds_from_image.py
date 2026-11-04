@@ -146,12 +146,10 @@ def roles(cl):
 
 
 def fit_text_colors(ds):
-    """Sobre cada fondo de color, el texto (oscuro/claro) con más contraste."""
+    """Sobre cada fondo de color, el texto (oscuro/claro) con más contraste. Sin fondo propio, cuenta el del lienzo."""
     pal = ds["paleta"]
     for r in ds["roles_texto"].values():
-        fondos = r.get("fondo")
-        if not fondos:
-            continue
+        fondos = r.get("fondo") or "fondo"
         fl = fondos if isinstance(fondos, list) else [fondos]
         best = max(("oscuro", "claro"), key=lambda t: min(contrast(pal[t], pal[f]) for f in fl))
         if r.get("color") in ("oscuro", "claro"):
