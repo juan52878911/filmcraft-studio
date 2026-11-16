@@ -1,6 +1,6 @@
 {
   "name": "filmcraft-studio",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Director de video para Claude Code: preproducción con biblia y design system, cada escena producida por su motor (FilmCraft, código, Blender, pantalla, IA, voz y música) y ensamblada y verificada en FilmCraft",
   "author": {
     "name": "Juan Bedoya",

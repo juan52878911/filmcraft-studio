@@ -141,6 +141,11 @@ pub fn ejecutar(a: &Args) -> Result<i32, String> {
         rutas.extend(serde_json::from_str::<Vec<String>>(j).map_err(|e| format!("--rutas-json: {e}"))?);
     }
     let paleta = a.opt("paleta").map(|p| p.split(',').map(|x| x.trim().to_string()).filter(|x| !x.is_empty()).collect());
+    if a.flag("solo-paleta") {
+        let f = a.req("flyer")?;
+        println!("{}", serde_json::to_string(&paleta_de_flyer(f)?).unwrap());
+        return Ok(0);
+    }
     let para = a.opt("para").unwrap_or("todos");
     if !["todos", "camara", "promo"].contains(&para) { return Err("--para: todos, camara o promo".into()) }
     let rk = ranking(a.opt("flyer"), paleta, &rutas, para)?;

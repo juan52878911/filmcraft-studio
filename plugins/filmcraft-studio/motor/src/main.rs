@@ -25,13 +25,14 @@ impl Args {
 }
 
 /// Opciones que nunca llevan valor (así `--json ds` no se come el posicional).
-const BANDERAS: [&str; 6] = ["todos", "json", "estricto", "md", "solo-ids", "sin-color"];
+const BANDERAS: [&str; 5] = ["todos", "json", "estricto", "md", "solo-paleta"];
 
 const AYUDA: &str = "cine — motor determinista de filmcraft-studio
 
 USO
   cine validar-ds <id|carpeta|ds.json> | --todos  [--json] [--estricto]
   cine elegir-ds  [--flyer F | --paleta \"#a,#b\"] [--ruta R | --rutas-json '[..]'] [--para todos|camara|promo] [--json]
+                  --flyer F --solo-paleta   (fondo, acento1..3 y claro del flyer, en JSON)
   cine medir-video VIDEO [--out medidas.json] [--umbral 0.3]   (ffprobe + ebur128 + cortes + negros/flashes)
   cine criterios  --biblia biblia.json [--medidas a.json,b.json] [--verificacion verificacion.json --compiled compiled.json] [--md]
   cine puntuar    [--ds id] [--compiled compiled.json] [--verificacion v.json] [--medidas a.json,b.json]

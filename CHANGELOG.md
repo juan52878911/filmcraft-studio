@@ -2,6 +2,12 @@
 
 Formato: una sección por versión, de la más nueva a la más vieja.
 
+## 0.4.0 — sin publicar
+
+- **Motor determinista `cine`** (Rust, `motor/`, lanzador `bin/cine`): `validar-ds` (sustituye a `ds_validate.py`, que se borra), `elegir-ds` (sustituye al ranking de `brief_infer.match_ds`, con ΔE en OKLab), `medir-video`, `criterios` (comprueba los criterios de la biblia y da la tabla del informe), `puntuar` (6 ejes del crítico con reglas fijas), `nota` (veredicto, 5 arreglos y Mejora/Regresión/Empate) y `ab`. Se compila con `nix build` (flake en la raíz), `motor/compilar.sh` o el workflow `motor`; los binarios van en `bin/<so>-<arq>/` y no se suben.
+- **Un solo crítico con IA**: `critico` y `critico-estilo` se funden en `critico-juicio`, que solo juzga historia, copy, originalidad y los criterios marcados `juicio`, con las medidas como evidencia y techo. A/B a ciegas solo si la nota es ambigua; un bloqueante nuevo es Regresión.
+- **Criterios de la biblia** con `medida` y `juicio` (esquema ampliado; los `{id, que, como}` siguen valiendo). Detalle, paridad y tiempos en `AUDITORIA.md`.
+
 ## 0.3.0 — sin publicar
 
 - **Uso en lenguaje natural**: «reel/resumen de una charla o evento» entra directo a `montaje-headless`/`montaje-asistido` (`director-video` lo desvía sin biblia larga); skill nueva `imagen-a-video` para animar una sola imagen; `analizar`, `nota` y `entregar` dejan de llevar `disable-model-invocation` y las skills los siguen por su ruta cuando el usuario lo pide en texto. `herramientas.py --doctor --para promo` (también `codigo`/`pantalla`): FilmCraft pasa a recomendado y se comprueba VHS. Promo: escena mínima antes de los fotogramas de la preproducción y «¿exprés o completo?» como primera pregunta. `/editar`: el modo se pregunta al principio (fija `W`) y el asistido hace G0 antes de G3. Avisos de tiempo de análisis en material largo y de que el ranking de DS sin `--ruta` no pasa de 0,5.
