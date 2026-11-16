@@ -1,12 +1,15 @@
 ---
-description: Hace cualquier video de punta a punta (promo, demo, tutorial, explainer, reel, entrevista, short, pitch…) con brief, guion por escenas, design system y ensamblado en FilmCraft
-argument-hint: <qué video quieres> [--material carpeta] [--formato 16:9|9:16|1:1] [--modo headless|asistido]
+description: "Hace un video nuevo de punta a punta: preproducción con biblia, producción por motores y verificación"
+argument-hint: "<qué video quieres> [--refs archivos|carpetas|URLs] [--material carpeta] [--formato 16:9|9:16|1:1] [--modo headless|asistido] [--sin-preguntas] [--expres]"
+disable-model-invocation: true
 ---
 
 Sigue la skill `director-video`. Entrada: $ARGUMENTS
 
-1. Brief y tipo de video (`brief-video`, `director-video/references/tipos.md`). Pregunta una sola vez lo que cambie el video y no se pueda inferir.
-2. Hechos con fuente y `guion.json`; enséñalo como tabla (en asistido, espera el visto bueno).
-3. Design system: del catálogo o nuevo, con fotogramas fijos para elegir.
-4. Produce cada escena con su motor (`motores.md`), ensambla en FilmCraft (`analyze_media` → `plan.json` → `plan_compile` → `apply_plan`) y verifica con `reglas.md`, `verify.py` y el agente `critico`.
-5. Entrega el proyecto y el informe; exporta solo si lo piden.
+`S=${CLAUDE_PLUGIN_ROOT}/scripts`; antes de cada script, `export CLAUDE_PLUGIN_DATA=${CLAUDE_PLUGIN_DATA}`.
+
+El flujo (preproducción con biblia → producción por escena → ensamblado en FilmCraft → verificación contra la biblia → entrega) y sus reglas están en la skill: no los repitas de memoria. Atajos:
+- Si solo hay que montar material grabado (reel o resumen de una charla o un evento), pregunta «¿lo monto solo o contigo?» y pasa a `montaje-headless` o `montaje-asistido`.
+- Si el encargo es animar una sola imagen, skill `imagen-a-video`.
+- `--expres` o «exprés»: modo exprés de `preproduccion`; `--sin-preguntas`: todo inferido y marcado.
+- Solo se exporta si lo piden.

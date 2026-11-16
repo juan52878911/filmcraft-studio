@@ -13,6 +13,7 @@ Los keyframes se escriben solo con e.kf(): `time` en ticks de la secuencia y
 import json
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -25,8 +26,13 @@ class _MCP:
 
     def __init__(self, project=None):
         cmd = [CLI] + (["--project", str(project)] if project else []) + ["mcp"]
-        self.p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                                  text=True, bufsize=1)
+        # stderr a un temporal: si el CLI muere, el error lleva sus últimas líneas
+        self.err = tempfile.TemporaryFile(mode="w+")
+        try:
+            self.p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=self.err,
+                                      text=True, bufsize=1)
+        except FileNotFoundError:
+            raise RuntimeError(f"no encuentro filmcraft-cli en {CLI} (fija FILMCRAFT_CLI)") from None
         self.n = 0
         self._rpc("initialize", {"protocolVersion": "2024-11-05", "capabilities": {},
                                  "clientInfo": {"name": "fcengine", "version": "1"}})
@@ -44,10 +50,20 @@ class _MCP:
         while True:
             line = self.p.stdout.readline()
             if not line:
-                raise RuntimeError("filmcraft-cli mcp terminó inesperadamente")
-            r = json.loads(line)
-            if r.get("id") == self.n:
+                raise RuntimeError("filmcraft-cli mcp terminó inesperadamente: " + (self._stderr() or "sin stderr"))
+            try:
+                r = json.loads(line)
+            except json.JSONDecodeError:
+                continue                                    # trazas del CLI por stdout: no son respuestas
+            if isinstance(r, dict) and r.get("id") == self.n:
                 return r
+
+    def _stderr(self):
+        try:
+            self.err.seek(0)
+            return "\n".join(self.err.read().strip().splitlines()[-8:])
+        except (OSError, ValueError):
+            return ""
 
     def x(self, command, params=None):
         r = self._rpc("tools/call", {"name": "command_run", "arguments": {"id": command, "params": params or {}}})
@@ -105,7 +121,10 @@ class Engine:
                 with open(self.journal, "a") as f:
                     f.write(json.dumps({"id": command, "params": params or {}, "ms": round((time.time() - t0) * 1000),
                                         **({"error": err[:300]} if err else {})}, ensure_ascii=False) + "\n")
-            if command.split(".")[0] in ("timeline", "sequence", "edit", "clip", "file") and command != "sequence.inspect":
+            # cambian la estructura (clips, pistas, lista de efectos): la secuencia cacheada deja de valer.
+            # setParam/setInterpolation y graphics.set solo cambian valores y no la invalidan (son la mayoría).
+            if (command.split(".")[0] in ("timeline", "sequence", "edit", "clip", "file") and command != "sequence.inspect") \
+                    or command in ("effects.apply", "effects.remove", "graphics.newText"):
                 self._seq = None
 
     def seq(self, fresh=False):
@@ -116,10 +135,6 @@ class Engine:
     @property
     def fps(self):
         return seq_fps(self.seq())
-
-    def f2s(self, frames):
-        """Fotogramas de la secuencia -> segundos."""
-        return frames / self.fps
 
     def snap(self, seconds):
         """Redondea al fotograma de la secuencia."""

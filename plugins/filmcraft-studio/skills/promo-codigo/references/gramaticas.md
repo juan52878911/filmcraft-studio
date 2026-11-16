@@ -45,8 +45,19 @@ Cada DS `promo-*` declara su gramática en `ds.json` (`gramatica`) y los detalle
 - **Firma**: caliente = corre, frío = congelado. Al congelar, las letras pierden temperatura hasta quedarse en su filo, y el mapa frío avanza por regiones desde un punto; al despertar retrocede con una llamarada.
 - **Técnica**: T a 1/4 de resolución (suma de gaussianas). Por glifo: radio = 28·calor, desplazamiento = (−10, +8)·calor, núcleo = 1 − 0,22·T y filo si el calor es < 0,3. El LUT frío se mezcla con un mapa por regiones, no con un escalar.
 - **Música**: UK garage 2-step a 134 BPM: pads de sierras desafinadas con vibrato lento, stabs de órgano y sub con portamento. En el arranque todo va filtrado a 420 Hz; la chispa es un silbido que baja y la ignición, un golpe con el fuego rugiendo mientras el filtro se abre. Al congelar, el filtro cae a 180 Hz y queda una campana de cristal FM. SFX: `chispa`, `ignicion`, `onda`, `enfoque`, `congelar`, `cierre`.
-- **Sobre otro material**: FilmCraft no tiene gradient map de varios tonos (Tint mapea a dos), así que el look se aplica con `scripts/promo_gradmap.py DS entrada salida --fuente x,y,sigma,ganancia [--invertir] [--niveles a,b] [--frio a-b]`. Sin fuentes, el halo va en todo, que es justo lo que el estilo evita.
+- **Sobre otro material**: FilmCraft no tiene gradient map de varios tonos (Tint mapea a dos), así que el look se aplica con `python3 $S/promo_gradmap.py DS entrada salida --fuente x,y,sigma,ganancia [--invertir] [--niveles a,b] [--frio a-b]`. Sin fuentes, el halo va en todo, que es justo lo que el estilo evita.
+
+### Otra piel de termo@1 · `promo-chispa`
+
+La misma gramática con la piel de otro producto (Chispa, un clasificador en cascada) y su propia metáfora: **la temperatura es la confianza**. La capa que llega a su umbral se enciende, la probabilidad de cada opción es su calor y, si ninguna capa llega, el frío nace en «escalar» y cubre el cuadro: no inventa, escala.
+- **La piel** es noche con un mapa de un solo tono de brasa (noche → granate → coral → ámbar → crema → blanco). Sobre fondo oscuro, lo frío es claro y nítido; el polvo es claro y las motas son ámbar.
+- **Lección:** meter azul o menta en el mapa caliente lo convierte en un arcoíris genérico.
+- **Sin grabación real** de terminal: la cascada animada es un esquema ilustrativo y lo dice en pantalla. Las cifras salen del repo con su condición de medida.
+
+## tres-fases@1 · `promo-tres-fases`
+
+Tres materias en un mismo papel (`#F4EFE4`): **vidrio** (Blender Cycles, anillos con dispersión delante de una placa emisiva) → **termo** (el calor florece desde el borde naranja del anillo) → **riso** (se enfría en semitono rosa caliente / azul frío). La firma es que la materia cambia y el papel se queda. 134 BPM, compases de 4; 16:9 y 9:16 recortados de un cuadrado de vidrio con el texto en el centro. La fase 3D pasa sus parámetros con `--param` (`motor_blender.py` no le da `promo`). Orden de render: placas → vidrio (Blender, Cycles a media resolución + máscara Eevee a resolución completa) → video; ver `motor.md`.
 
 ## Crear otra gramática
 
-Escribe aquí sus reglas (lienzo, tintas o paleta, tipografías, firma visual y sonora, cámara, transición, música), añade su kit a `promo_sfx.py` y un DS `promo-<nombre>` con `promo.firma`. Antes de animar, enseña dos fotogramas fijos (gancho y firma) junto a los demás estilos.
+Escribe aquí sus reglas (lienzo, tintas o paleta, tipografías, firma visual y sonora, cámara, transición, música), añade su kit a `promo_sfx.py`, sus fondos a `promo_fondos.py` y un DS `promo-<nombre>` con `promo.firma`. Antes de animar, enseña dos fotogramas fijos (gancho y firma) junto a los demás estilos: la escena con los segundos como último argumento (`… 0.6,9.2`).

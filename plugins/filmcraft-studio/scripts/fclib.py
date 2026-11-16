@@ -12,21 +12,19 @@ Para sesiones headless con ids devueltos entre comandos, usa fcengine.Engine.hea
 """
 import json
 import os
+import shutil
 import socket
 import subprocess
 from pathlib import Path
 
 TPS = 254016000000                       # ticks por segundo
-CLI = os.environ.get("FILMCRAFT_CLI", str(Path.home() / ".local/bin/filmcraft-cli"))
+CLI = (os.environ.get("FILMCRAFT_CLI") or shutil.which("filmcraft-cli")   # mismo orden que el doctor y .mcp.json
+       or str(Path.home() / ".local/bin/filmcraft-cli"))
 PORT = int(os.environ.get("FILMCRAFT_PORT", "9876"))
 
 
 def ticks(seconds):
     return round(seconds * TPS)
-
-
-def secs(t):
-    return t / TPS
 
 
 def fr(frame, fps):
@@ -45,16 +43,34 @@ class FC:
     """Canal de control: una petición JSON por línea, una respuesta por línea."""
 
     def __init__(self, port=PORT, timeout=120):
-        self.s = socket.create_connection(("127.0.0.1", port), timeout=timeout)
-        self.f = self.s.makefile("rw")
+        self.port, self.timeout = port, timeout
+        self._connect()
         self.n = 0
+
+    def _connect(self):
+        self.s = socket.create_connection(("127.0.0.1", self.port), timeout=self.timeout)
+        self.f = self.s.makefile("rw")
 
     def x(self, command, params=None):
         self.n += 1
         req = {"id": self.n, "method": "engine.execute", "params": {"command": command, "params": params or {}}}
         self.f.write(json.dumps(req, ensure_ascii=False) + "\n")
         self.f.flush()
-        r = json.loads(self.f.readline())
+        while True:
+            try:
+                line = self.f.readline()
+            except socket.timeout:
+                # tras un timeout el fichero del socket ya no admite lecturas («cannot read from timed out
+                # object»): se reabre el canal para que la sesión siga sirviendo; la respuesta tardía se pierde
+                self.close()
+                self._connect()
+                raise RuntimeError(f"{command}: la app no respondió en {self.timeout} s (puerto {self.port}); "
+                                   "puede haberse aplicado igualmente: compruébalo antes de repetirlo") from None
+            if not line:
+                raise RuntimeError(f"{command}: la app cerró el canal de control (puerto {self.port}) sin responder")
+            r = json.loads(line)
+            if r.get("id", self.n) == self.n:          # una respuesta de otra petición no es la nuestra
+                break
         if not r.get("ok"):
             raise RuntimeError(f"{command} {json.dumps(params, ensure_ascii=False)[:300]}: {r.get('error')}")
         return r.get("result")
@@ -100,8 +116,3 @@ def headless(project, *args, save=None, compact=True, check=True):
         return json.loads(txt)
     except json.JSONDecodeError:
         return txt
-
-
-def load_project(project):
-    """El .fcproj es JSON legible: útil para verificar keyframes (tiempo en ticks de media)."""
-    return json.load(open(project))

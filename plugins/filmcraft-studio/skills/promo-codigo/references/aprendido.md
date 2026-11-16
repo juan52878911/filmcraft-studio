@@ -20,12 +20,32 @@
 - **Gancho en el primer segundo** con el resultado («0.4s»). Pensado para verse sin sonido: el texto lleva el mensaje y el audio lo refuerza.
 - **Tres estilos distintos con el mismo guion** antes de decidir. Enseña fotogramas fijos, no videos, para elegir rápido.
 
+## Lo que salió de las críticas (gradient map y Chispa)
+
+- **Copiar el aspecto de una referencia da un clon.** La primera versión del gradient map puso el mapa en todo el texto por igual. El poster no hacía eso: el calor nacía en un lugar y cada parte del texto evolucionaba distinto. Primero hay que escribir la regla, dónde no actúa y cómo varía (`skills/preproduccion/references/referencias.md` del plugin).
+- **Sin metáfora, el estilo es un filtro.** Funcionó cuando la temperatura pasó a significar algo del producto: en kindling, caliente es que corre y frío que está congelada; en Chispa, la temperatura es la confianza del clasificador.
+- **«Se ve genérico» tenía 8 causas concretas.** Las detectó una crítica con ojos frescos y se arreglaron todas:
+  - cifras a sangre;
+  - el mapa también dentro del glifo;
+  - una maqueta por idea;
+  - poco texto;
+  - cortes en el beat y solo dos transiciones;
+  - formas con significado;
+  - un cierre que evoluciona;
+  - en la terminal, zoom, pausa y lo demás fuera de foco.
+
+  Hoy son la lista de `skills/preproduccion/references/originalidad.md` del plugin y el agente `critico-estilo`.
+- **Un tono ajeno en el mapa lo vuelve arcoíris.** El azul y el menta en el mapa caliente de Chispa lo convirtieron en un arcoíris genérico; un solo tono de brasa lo arregló.
+- **Lo que no se ve en la hoja no existe.** Las chispas y las barras pintadas como manchas no se veían; se arreglaron pintándolas en capas de brillo.
+- **Las salidas de la terminal no llegan cuando dicen las constantes.** Aparecen después del tecleo. Hay que medir el fotograma de cada fila y remapear con esa medida.
+- **Preguntar antes ahorra rondas.** Chispa no tenía grabación real ni ejemplos suficientes, y una sola pregunta («sin terminal») lo resolvió. Por eso la preproducción pregunta todo antes de animar.
+
 ## Música y sonido
 
 - **Elige un micro-género con BPM antes de montar** (UK garage a 134, breakbeat lo-fi, ambiental con pulsos) y corta en los golpes.
 - **Prompts para IA de música**: género + BPM + instrumentos + exclusiones («no ukelele») + marcas de estructura o de tiempo para que el *drop* caiga en la revelación. Nunca nombres de artistas.
 - **Un SFX por acción en pantalla**: clics sacados de la propia grabación, lápiz, sello, hielo, imprenta…
-- **Máster**: −14 LUFS integrados y −1 dBTP de pico. Solo YouTube publica objetivo; X, LinkedIn, TikTok y Meta no publican ninguno.
+- **Máster**: −14 LUFS integrados y ≤ −1 dBTP de pico real medido (consigna `TP=-1.5` en `loudnorm` para quedar por debajo). Solo YouTube publica objetivo; X, LinkedIn, TikTok y Meta no publican ninguno.
 - **Ducking** de 6–12 dB bajo la voz.
 - **Sintetizar con numpy** evita licencias y cuadra con la rejilla al fotograma.
 - **Licencias de IA musical** (estado de noviembre de 2026):
@@ -47,7 +67,7 @@
 | X, LinkedIn, YouTube | 16:9, 20–30 s |
 | Reels, Shorts, TikTok | 9:16, 20–30 s; titulares ajustados al ancho y rótulos en una franja baja |
 | README de GitHub | MP4 o WebM de hasta 10 MB (cuenta gratuita) o 100 MB (de pago); un *loop* corto sin audio |
-| Móvil, vía SendUserFile | menos de 30 MB |
+| Móvil (enviado al teléfono) | menos de 30 MB |
 
 ## Errores que salieron en la hoja de fotogramas
 

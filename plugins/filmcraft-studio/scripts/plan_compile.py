@@ -21,18 +21,50 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from common import jload, jsave, load_ds  # noqa: E402
+from common import FUNCIONALES, cli, cubre, jload, jsave, load_ds, norm  # noqa: E402,F401
 from fcstyle import measure  # noqa: E402
-from freezones import best_spot, occupancy  # noqa: E402
+from freezones import best_spot, occupancy, sin_vision  # noqa: E402
 
-FUNCIONALES = {"que", "nos", "de", "del", "la", "el", "los", "las", "y", "o", "a", "en", "por", "para", "con", "un",
-               "una", "se", "le", "les", "lo", "al", "es", "si", "no", "mi", "tu", "su", "pero", "como"}
 POP_ROLES = {"etiqueta", "concepto", "escalon", "eco", "nombre"}
 SIN_MARCA = {"tarjeta", "titulo", "cierre"}
+ANOTACION = ("(", "[", "*", "♪")          # «(sonido distorsionado)», «[música]»: whisper, no voz
 
 
-def norm(w):
-    return re.sub(r"[^\wáéíóúñü]", "", w.lower())
+def music_keyframes(blocks, total, m):
+    """Keyframes [t, dB] de la base musical: nivel por bloque (agachada con voz) y fundido final de salida_s.
+
+    El fundido empieza en total - salida_s con el nivel que la curva tenga EN ESE INSTANTE (interpolado) y
+    termina en −60 al final; nada posterior a ese instante sobrevive, así que dura salida_s de verdad y no
+    sube mientras aún suena la voz. Sin tiempos negativos en piezas más cortas que salida_s."""
+    ramp = m.get("rampa_s", 0.4)
+    kfs = []
+    for b in blocks:
+        lvl = m["bajo_voz_db"] if b.get("voz", b["tipo"] not in ("tarjeta", "titulo", "cierre", "fotos")) else m["sin_voz_db"]
+        kfs.append([round(b["start"], 3), lvl])
+        kfs.append([round(max(b["start"], b["end"] - ramp), 3), lvl])
+    kfs.sort(key=lambda k: k[0])
+    t_out = round(max(0.0, total - m.get("salida_s", 1.5)), 3)
+
+    def nivel(t):
+        if not kfs:
+            return m["sin_voz_db"]
+        if t <= kfs[0][0]:
+            return kfs[0][1]
+        for (t0, v0), (t1, v1) in zip(kfs, kfs[1:]):
+            if t0 <= t <= t1:
+                return v0 if t1 - t0 < 1e-9 else v0 + (v1 - v0) * (t - t0) / (t1 - t0)
+        return kfs[-1][1]
+    lvl_out = round(nivel(t_out), 2)
+    kfs = [k for k in kfs if k[0] < t_out - 1e-3] + [[t_out, lvl_out]]
+    if total > t_out + 1e-3:
+        kfs.append([round(total, 3), -60])
+    clean = []
+    for t, v in kfs:
+        if clean and abs(clean[-1][0] - t) < 1e-3:
+            clean[-1] = [t, v]
+        else:
+            clean.append([t, v])
+    return clean
 
 
 class Compiler:
@@ -78,9 +110,17 @@ class Compiler:
 
     def sfx_dur(self, path):
         if path not in self._dur:
-            r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", path],
-                               capture_output=True, text=True)
-            self._dur[path] = float(r.stdout.strip() or 0.5)
+            d = None
+            if not Path(path).exists():
+                self.avisos.append(f"el SFX {path} no existe: uso 0,5 s")
+            else:
+                try:
+                    r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", path],
+                                       capture_output=True, text=True)
+                    d = float(r.stdout.strip())
+                except (OSError, ValueError):
+                    self.avisos.append(f"ffprobe no da la duración del SFX {Path(path).name}: uso 0,5 s")
+            self._dur[path] = d if d and d > 0 else 0.5
         return self._dur[path]
 
     def snap_cut(self, stem, t, kind):
@@ -133,6 +173,9 @@ class Compiler:
                     z = self.snap_cut(stem, float(p["out"]), "out")
                     z = min(z, info["dur"] - 0.02)
                     sp = float(p.get("speed", 1))
+                    if sp <= 0:
+                        self.avisos.append(f"{bid}.p{pi + 1}: speed {sp} no válida (debe ser > 0), lo salto")
+                        continue
                     dur = self.snap((z - a) / sp)
                     if dur <= 0:
                         self.avisos.append(f"{bid}.p{pi + 1}: duración nula, lo salto")
@@ -157,7 +200,11 @@ class Compiler:
                     T = s["start"] + dur
             elif tipo == "fotos":
                 fd = self.bf(b.get("f", ds["estructura"].get("foto_f", 20)))
-                for fi, f in enumerate(b["fotos"][:ds["estructura"].get("fotos_max", 8)]):
+                fmax = ds["estructura"].get("fotos_max", 8)
+                if len(b["fotos"]) > fmax:
+                    self.avisos.append(f"{bid}: {len(b['fotos'])} fotos y el DS admite {fmax}; descarto las "
+                                       f"{len(b['fotos']) - fmax} últimas")
+                for fi, f in enumerate(b["fotos"][:fmax]):
                     s = {"id": f"{bid}.f{fi + 1}", "bloque": bid, "tipo": "foto", "path": f, "start": self.snap(T), "dur": fd,
                          "entrada": "flash" if fi else (b.get("transicion") or "flash")}
                     bsegs.append(s)
@@ -210,6 +257,17 @@ class Compiler:
                     if tipo in ("tarjeta", "titulo", "cierre"):
                         dur = t.get("dur") or (Te - st)
                 dur = self.snap(min(dur, max(0.2, Te - st)) if t["rol"] != "eco" else dur)
+                if st + dur > Te + 1e-4:
+                    # nada pasa del final del bloque: en el último alargaría la secuencia (negro al final) y
+                    # nadie lo vería; el eco tiene duración fija (n copias × frames), así que se adelanta
+                    st0, st = st, self.snap(max(Tb, Te - dur))
+                    if st + dur > Te + 1e-4:
+                        dur = self.snap(Te - st)
+                    self.avisos.append(f"{bid}: «{t['texto'][:20]}» ({t['rol']}) pasaba del final del bloque "
+                                       f"({st0 + dur:.2f} > {Te:.2f} s): empieza en {st:.2f} s")
+                    if dur <= 0:
+                        self.avisos.append(f"{bid}: «{t['texto'][:20]}» no cabe en el bloque, lo salto")
+                        continue
                 item = {"id": f"{bid}.x{ti + 1}", "bloque": bid, "rol": t["rol"], "texto": t["texto"], "start": self.snap(st),
                         "dur": dur, "variante": t.get("variante", ti)}
                 if t["rol"] in ("titulo", "cierre"):
@@ -256,8 +314,15 @@ class Compiler:
                 sfx.append(self.ev(e["tipo"], Tb + e.get("t", 0), bid, e.get("db")))
             for ci, c in enumerate(b.get("capas", [])):
                 st = Tb + c.get("t", 0)
+                cdur = self.snap(c.get("dur", 1.5))
+                if self.snap(st) + cdur > Te + 1e-4:       # una capa nunca pasa del final de su bloque
+                    cdur = self.snap(Te - self.snap(st))
+                    if cdur <= 0:
+                        self.avisos.append(f"{bid}.c{ci + 1}: la capa empieza en {st:.2f} s, después del bloque; la salto")
+                        continue
+                    self.avisos.append(f"{bid}.c{ci + 1}: la capa pasaba del final del bloque ({Te:.2f} s): dura {cdur:.2f} s")
                 capas.append({"id": f"{bid}.c{ci + 1}", "bloque": bid, "img": c.get("img") or ds["fondos"].get(c.get("fondo", "cap")),
-                              "pista": c.get("pista", "Producto"), "start": self.snap(st), "dur": self.snap(c.get("dur", 1.5)),
+                              "pista": c.get("pista", "Producto"), "start": self.snap(st), "dur": cdur,
                               "entra": c.get("entra"), "escala": c.get("escala", 0.72), "pos": c.get("pos", [0.5, 0.5])})
                 if c.get("sfx", "pop") and c.get("pista", "Producto") == "Producto":
                     sfx.append(self.ev(c.get("sfx", "pop"), st, bid))
@@ -273,7 +338,7 @@ class Compiler:
             tr = {"id": f"{s['id']}.tr", "bloque": s["bloque"], "tipo": ent, "t": s["start"], "sale": prev["id"], "entra": s["id"]}
             cfg = self.ds["transiciones"].get({"barrido": "barrido_camara"}.get(ent, ent), {})
             if ent == "matte":
-                ms = cfg.get("mattes", ["acento1"])
+                ms = cfg.get("mattes") or ["acento1"]
                 tr["matte"] = ms[sum(1 for x in trans if x["tipo"] == "matte") % len(ms)]
                 tr["dur"] = self.bf(cfg.get("f", 28))
             elif ent in ("flash", "glitch"):
@@ -299,9 +364,9 @@ class Compiler:
         total = round(T, 4)
         marca = self.brand_spans(blocks_out, total)
         music = self.music(blocks_out, total)
-        sfx = self.alloc_sfx([x for x in sfx if x])
+        sfx = self.alloc_sfx([x for x in sfx if x], total)
         cobertura = self.coverage(texts, caps)
-        return {"version": 1, "ds": ds["id"], "fps": self.fps, "lienzo": ds["lienzo"], "duracion": total,
+        return {"version": 1, "ds": ds["id"], "ds_dir": ds.get("_dir"), "fps": self.fps, "lienzo": ds["lienzo"], "duracion": total,
                 "bloques": blocks_out, "segmentos": segs, "textos": texts, "subtitulos": caps, "marca": marca,
                 "capas": capas, "transiciones": trans, "sfx": sfx, "musica": music,
                 "grade": {"segmentos": [s["id"] for s in segs if s["tipo"] == "video"], **self.ds["grade"]},
@@ -312,7 +377,10 @@ class Compiler:
         if "palabra" in t:
             vids = [s for s in bsegs if s["tipo"] == "video"]
             if "plano" in t:
-                vids = [bsegs[t["plano"]]] if t["plano"] < len(bsegs) else vids
+                if 0 <= t["plano"] < len(bsegs):
+                    vids = [bsegs[t["plano"]]]
+                else:
+                    self.avisos.append(f"«{t.get('texto', '')[:20]}» pide el plano {t['plano']} y el bloque tiene {len(bsegs)}")
             for s in vids:
                 hit = self.find_word(s["stem"], t["palabra"], s["in"], s["out"])
                 if hit:
@@ -339,7 +407,10 @@ class Compiler:
 
     def free_pos(self, seg, t0, t1, size, lado, preferir=None):
         if not seg or seg["tipo"] != "video":
-            return best_spot([], size, self.ds, lado, preferir)
+            pos, info = best_spot([], size, self.ds, lado, preferir)
+            if info.get("aviso"):
+                self.avisos.append(f"el pop-up de {t0:.2f}s {info['aviso']} en zona libre; va al centro")
+            return pos, info
         a = seg["in"] + (t0 - seg["start"]) * seg["speed"]
         b = seg["in"] + (t1 - seg["start"]) * seg["speed"]
         sc, anc = seg.get("punch", 100), (0.5, 0.5)
@@ -348,7 +419,14 @@ class Compiler:
         occ = occupancy(self.vision(seg["stem"]), a, b, sc, anc)
         pos, info = best_spot(occ, size, self.ds, lado, preferir)
         info["personas"] = len(occ or [])
-        if info.get("solape_cara"):
+        sin = sin_vision(self.vision(seg["stem"]), a, b)
+        if sin:
+            info["sin_vision"] = sin
+            self.avisos.append(f"{seg['id']}: el detector falló en {sin} fotograma(s) cerca del pop-up de {t0:.2f}s: "
+                               "puede tapar caras que no se vieron")
+        if info.get("aviso"):
+            self.avisos.append(f"{seg['id']}: el pop-up de {t0:.2f}s {info['aviso']} en zona libre; va al centro")
+        elif info.get("solape_cara"):
             self.avisos.append(f"{seg['id']}: el pop-up de {t0:.2f}s solapa caras ({info['solape_cara']})")
         elif info.get("solape"):
             self.avisos.append(f"{seg['id']}: el pop-up de {t0:.2f}s roza cuerpos ({info['solape']})")
@@ -362,7 +440,7 @@ class Compiler:
             if s["tipo"] != "video" or s["mute"]:
                 continue
             ws = [w for w in self.words(s["stem"]) if w["s"] >= s["in"] - 0.05 and w["e"] <= s["out"] + 0.15
-                  and not w["w"].startswith("[")]
+                  and not w["w"].startswith(ANOTACION)]
             chunks, cur = [], []
             for w in ws:
                 txt = self.corr.get(norm(w["w"]), w["w"])
@@ -409,22 +487,8 @@ class Compiler:
 
     def music(self, blocks, total):
         m = self.ds["musica"]
-        kfs = []
-        ramp = m.get("rampa_s", 0.4)
-        for b in blocks:
-            lvl = m["bajo_voz_db"] if b.get("voz", b["tipo"] not in ("tarjeta", "titulo", "cierre", "fotos")) else m["sin_voz_db"]
-            kfs.append([round(b["start"], 3), lvl])
-            kfs.append([round(max(b["start"], b["end"] - ramp), 3), lvl])
-        kfs.append([round(total - m.get("salida_s", 1.5), 3), kfs[-1][1] if kfs else m["sin_voz_db"]])
-        kfs.append([round(total, 3), -60])
-        kfs.sort(key=lambda k: k[0])
-        clean = []
-        for t, v in kfs:
-            if clean and abs(clean[-1][0] - t) < 1e-3:
-                clean[-1] = [t, v]
-            else:
-                clean.append([t, v])
-        return {"bloque": "*", "dur": total, "bpm": m.get("bpm", 112), "archivo": m.get("archivo"), "keyframes": clean}
+        return {"bloque": "*", "dur": total, "bpm": m.get("bpm", 112), "archivo": m.get("archivo"),
+                "keyframes": music_keyframes(blocks, total, m)}
 
     def ev(self, key, t, bid, db=None):
         p = self.ds["sfx"]["_mapa_abs"].get(key)
@@ -453,11 +517,16 @@ class Compiler:
             else:
                 self.avisos.append(f"{t['id']}: sin pista de texto libre para «{t['texto'][:20]}»")
 
-    def alloc_sfx(self, evs):
+    def alloc_sfx(self, evs, total=None):
         tracks = self.ds["pistas"].get("sfx", ["SFX"])
         busy = {t: [] for t in tracks}
         out = []
         for i, e in enumerate(sorted(evs, key=lambda e: e["start"])):
+            if total is not None and e["start"] + e["dur"] > total + 1e-4:
+                # un SFX que pasa del final alarga la secuencia: el export acaba con negro y la cola del sonido
+                e = {**e, "dur": round(max(0.0, total - e["start"]), 4), "recortado": True}
+                if e["dur"] <= 0:
+                    continue
             for t in tracks:
                 if all(e["start"] >= b or e["start"] + e["dur"] <= a for a, b in busy[t]):
                     busy[t].append((e["start"], e["start"] + e["dur"]))
@@ -470,14 +539,13 @@ class Compiler:
 
     def coverage(self, texts, caps):
         obl = (self.brief.get("obligatorios") or {}).get("valor") or []
-        blob = " ".join(norm(x) for t in texts + caps for x in t["texto"].split())
+        textos = [t["texto"] for t in texts + caps]
         cov = {}
         for o in obl:
-            parts = [norm(p) for p in o.split() if norm(p)]
             if o == "momento de premio":
-                cov[o] = any(b["tipo"] == "humano" for b in self.plan["bloques"])
+                cov[o] = any(b.get("tipo") == "humano" for b in self.plan["bloques"])
             else:
-                cov[o] = bool(parts) and max(parts, key=len) in blob          # la palabra distintiva
+                cov[o] = cubre(o, textos)                 # palabras enteras, no subcadenas
         return cov
 
 
@@ -489,9 +557,15 @@ def main():
     ap.add_argument("--out")
     a = ap.parse_args()
     plan = jload(a.plan)
-    ds = load_ds(plan["ds"])
+    try:
+        ds = load_ds(plan["ds"])
+    except FileNotFoundError as ex:
+        sys.exit(f"error: {ex}")
     brief = jload(a.brief) if a.brief else None
-    c = Compiler(plan, ds, a.analisis, brief).compile()
+    try:
+        c = Compiler(plan, ds, a.analisis, brief).compile()
+    except KeyError as ex:          # «no hay análisis de 'x'», un rol que el DS no define…
+        sys.exit(f"error: el plan pide algo que no existe: {ex.args[0] if ex.args else ex}")
     out = a.out or str(Path(a.plan).with_name("compiled.json"))
     jsave(out, c)
     print(json.dumps({"compiled": out, "duracion": c["duracion"], "segmentos": len(c["segmentos"]), "cortes": c["cortes"],
@@ -501,4 +575,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    cli(main)

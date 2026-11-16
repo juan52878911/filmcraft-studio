@@ -349,11 +349,11 @@
    "despertar": "despertar.wav",
    "medida": "medida.wav",
    "riser": "riser.wav",
-   "titulo": "titulo.wav"
+   "titulo": "titulo.wav",
+   "contador": "contador.wav"
   }
  },
  "musica": {
-  "generador": "promo/kindling-v0.20/audio_blueprint.py",
   "bpm": 134,
   "genero": "electrónica ambiental: arpegio de pulsos, kick a medio tiempo, tic de reloj",
   "bajo_voz_db": -10,
@@ -418,11 +418,11 @@
  },
  "vocabulario": "kindling, kling, microVM, Firecracker, Apple Silicon, kling-hv, compose, MCP, HOL Guard",
  "promo": {
-  "motor": "código: VHS + Python (PIL, numpy) + ffmpeg; ejemplo en promo/kindling-v0.20/",
+  "motor": "código: grabación real con VHS + escenas en Python (PIL, numpy) fotograma a fotograma a un pipe de ffmpeg; cómo se escribe: skills/promo-codigo/references/motor.md",
   "bpm": 134,
   "rejilla": "todo evento cae en un beat; escenas en compases de 4 beats",
   "material_real": "la terminal es una grabación real con VHS; nunca UI inventada por IA",
-  "timeline": "timeline.py: escenas en beats y REMAP salida->fuente para que cada resultado real caiga en un beat",
+  "timeline": "línea de tiempo en beats (compases de 4) y REMAP salida->fuente para que cada resultado real caiga en un beat",
   "firma": "plano: todo se traza (perímetros en sentido horario, cotas desde el centro, texto tecleado); congelado = rayado de sección y grano quieto; un solo punto de brasa marca lo que corre",
   "camara": "la grabación real es el DETALLE A del plano, con marcas de registro; anotaciones ①②③ con línea guía horizontal",
   "cifras": "barras como cotas a escala lineal real; si la nueva casi no se ve, se dice en el gráfico"

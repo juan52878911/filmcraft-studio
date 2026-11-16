@@ -11,10 +11,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).parent))
-from common import font_file, load_ds  # noqa: E402
+from common import load_ds, pil_font  # noqa: E402
 from ds_from_image import contrast  # noqa: E402
 
 
@@ -58,13 +58,14 @@ def main():
     bg, ink = pal["fondo"], pal["claro"] if contrast(pal["claro"], pal["fondo"]) > 4 else pal["oscuro"]
     im = Image.new("RGB", (W, H), bg)
     d = ImageDraw.Draw(im)
-    tit = ImageFont.truetype(font_file(ds["fuentes"]["titular"]), 84,
-                             index=9 if ds["fuentes"]["titular"]["archivo"].endswith("HelveticaNeue.ttc") else 0)
-    meta = ImageFont.truetype(font_file(ds["fuentes"]["meta"]), 30)
-    small = ImageFont.truetype(font_file(ds["fuentes"]["meta"]), 24)
+    fu = ds.get("fuentes", {})
+    f_meta = fu.get("meta") or fu.get("ui") or {"familia": "Menlo"}
+    tit = pil_font(fu.get("titular", f_meta), 84)          # pil_font elige la cara de un .ttc por su estilo
+    meta = pil_font(f_meta, 30)
+    small = pil_font(f_meta, 24)
     d.text((gap * 2, 110), ds["nombre"].upper(), font=tit, fill=pal["acento1"], anchor="ls")
     d.text((gap * 2, 160), f"{ds['id']} · {ds['gramatica']} · {ds['lienzo']['ancho']}x{ds['lienzo']['alto']} · "
-                           f"{ds['promo']['bpm']} BPM · render real", font=meta, fill=ink, anchor="ls")
+                           f"{ds.get('promo', {}).get('bpm', '?')} BPM · render real", font=meta, fill=ink, anchor="ls")
     for k, fr in enumerate(frames):
         x = gap + (k % cols) * (cw + gap)
         y = head + (k // cols) * (ch + gap)

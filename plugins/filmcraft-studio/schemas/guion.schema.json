@@ -1,0 +1,18 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://github.com/juan52878911/filmcraft-studio/plugins/filmcraft-studio/schemas/guion.schema.json",
+ "title": "guion.json: escenas, hechos con fuente y motor por escena",
+ "description": "Básico. Referencia: skills/director-video/references/guion.md.",
+ "type": "object",
+ "required": ["ds", "escenas"],
+ "properties": {
+  "$schema": {"type": "string"},
+  "version": {"type": "integer"}, "titulo": {"type": "string"}, "tipo": {"type": "string"},
+  "formato": {"type": "array", "items": {"type": "string"}}, "bpm": {"type": "number", "exclusiveMinimum": 0},
+  "ds": {"type": "string"}, "idea": {"type": "string"}, "cta": {"type": "string"},
+  "hechos": {"type": "array", "items": {"type": "object", "required": ["id", "dato", "fuente"]}},
+  "escenas": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["id", "motor"],
+              "properties": {"id": {"type": "string"}, "motor": {"type": "string"}, "beats": {}, "segundos": {},
+                             "objetivo": {"type": "string"}, "pantalla": {}}}}
+ }
+}

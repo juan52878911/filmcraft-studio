@@ -6,7 +6,7 @@ Inspirado en la autoevaluación de video-use (MIT) y adaptado al render headless
 
 1. Guarda el proyecto (`file.save` por el canal de control o `--save`) y renderiza hojas headless:
    ```bash
-   python3 scripts/render_sheet.py PROYECTO.fcproj hoja.jpg 1.2 6.4 12.9 …
+   python3 $S/render_sheet.py PROYECTO.fcproj hoja.jpg 1.2 6.4 12.9 …   # S viene del SKILL.md
    ```
 2. Revisa cada corte (±1 s), cada transición (antes, pico, después) y cada pop-up (inicio, mitad, final). Comprueba:
    - salto, flash o negro inesperado en el corte;

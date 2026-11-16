@@ -1,9 +1,10 @@
 {
   "name": "filmcraft-studio",
-  "version": "0.2.0",
-  "description": "Director de video para Claude Code: de un pedido a brief, guion por escenas y design system, con cada escena producida por su motor (FilmCraft, render por código, pantalla, IA, voz y música) y ensamblada y verificada en FilmCraft",
+  "version": "0.3.0",
+  "description": "Director de video para Claude Code: preproducción con biblia y design system, cada escena producida por su motor (FilmCraft, código, Blender, pantalla, IA, voz y música) y ensamblada y verificada en FilmCraft",
   "author": {
-    "name": "Juan"
+    "name": "Juan Bedoya",
+    "url": "https://github.com/juan52878911"
   },
   "license": "MIT",
   "keywords": [

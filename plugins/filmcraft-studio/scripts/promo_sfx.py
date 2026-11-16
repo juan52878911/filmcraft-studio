@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """Kit de SFX sintetizados (libres de derechos) para las gramáticas de promo por código.
 
-Uso: promo_sfx.py GRAMATICA DIR_SALIDA
-     GRAMATICA: temperatura | plano | riso | termo
+Uso: promo_sfx.py GRAMATICA DIR_SALIDA [--solo evento,evento]
+     GRAMATICA: temperatura | plano | riso | termo | tres-fases (= kit riso)
 
-Escribe un WAV por evento (48 kHz, estéreo, pico -3 dBFS) con los mismos sintetizadores que los
-promos de kindling v0.20 (promo/kindling-v0.20/audio_*.py), para que un DS de promo tenga su
-`sfx.mapa` con archivos reales y FilmCraft o cualquier otro motor los pueda usar.
+--solo escribe solo esos eventos (para completar un kit sin tocar los WAV que ya existen).
+
+Escribe un WAV por evento (48 kHz, estéreo, pico -3 dBFS) con los sintetizadores con que se hicieron
+los primeros promos de cada gramática, para que un DS de promo tenga su `sfx.mapa` con archivos reales
+y FilmCraft o cualquier otro motor los pueda usar.
 """
+import argparse
 import sys
 import wave
 from pathlib import Path
@@ -250,9 +253,11 @@ KITS = {
     "temperatura": {"tecla": click, "barrido": whoosh, "gancho": impact, "cierre": bell_sting, "congelar": ice,
                     "despertar": ping, "riser": riser, "contador": tick, "titulo": whoosh},
     "plano": {"tecla": click, "trazo": pencil, "rayado": scribble, "sello": stamp, "barrido": paper_slide,
-              "gancho": stamp, "cierre": stamp, "despertar": ping, "medida": lambda: ping(1318), "riser": riser, "titulo": paper_slide},
+              "gancho": stamp, "cierre": stamp, "despertar": ping, "medida": lambda: ping(1318), "riser": riser, "titulo": paper_slide,
+              "contador": tick},
     "riso": {"tecla": click, "imprenta": press, "gancho": press, "cierre": press, "hoja": slap,
-             "rotulador": lambda: scribble(0.3), "congelar": tape_stop, "vinilo": crackle, "riser": riser, "titulo": slap},
+             "rotulador": lambda: scribble(0.3), "congelar": tape_stop, "vinilo": crackle, "riser": riser, "titulo": slap,
+             "despertar": ping, "contador": tick},
     "termo": {"tecla": click, "onda": heatwave, "gancho": heatwave, "enfoque": focus, "titulo": focus,
               "congelar": frost, "despertar": heatwave, "cierre": warm_chord, "contador": tick, "riser": riser,
               "chispa": spark_fall, "ignicion": ignition, "golpe": thump, "escaner": scanner},
@@ -270,12 +275,27 @@ def write(path, sig):
         w.writeframes(pcm.tobytes())
 
 
+KITS["tres-fases"] = KITS["riso"]   # vidrio → termo → riso: entrega en riso
+
+
 def main():
-    if len(sys.argv) != 3 or sys.argv[1] not in KITS:
-        sys.exit(__doc__)
-    out = Path(sys.argv[2])
+    ap = argparse.ArgumentParser(description="Kit de SFX sintetizados de una gramática de promo.")
+    ap.add_argument("gramatica")
+    ap.add_argument("salida")
+    ap.add_argument("--solo", default="", help="eventos separados por comas")
+    a = ap.parse_args()
+    g = a.gramatica.split("@")[0]
+    if g not in KITS:
+        sys.exit(f"gramática '{g}' sin kit de SFX; conocidas: {', '.join(sorted(KITS))}")
+    solo = [x for x in a.solo.split(",") if x]
+    falta = [x for x in solo if x not in KITS[g]]
+    if falta:
+        sys.exit(f"el kit {g} no tiene {', '.join(falta)}; tiene: {', '.join(KITS[g])}")
+    out = Path(a.salida)
     out.mkdir(parents=True, exist_ok=True)
-    for name, fn in KITS[sys.argv[1]].items():
+    for name, fn in KITS[g].items():
+        if solo and name not in solo:
+            continue
         write(out / f"{name}.wav", fn())
         print(out / f"{name}.wav")
 

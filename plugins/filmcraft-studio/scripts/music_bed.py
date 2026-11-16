@@ -1,16 +1,30 @@
-"""Base musical sintetizada (promo-tech, La menor, 112 bpm) a la duración pedida.
+#!/usr/bin/env python3
+"""Base musical sintetizada (promo-tech, La menor, 112 bpm) para una duración pedida.
 
 Uso: music_bed.py SALIDA.wav DURACION_S [--bpm 112]
-Adaptado de sonidos/_scripts/synth_bed.py: BARS sale de la duración (+1 compás de cola) y el WAV se recorta.
+El WAV NO se recorta: dura compases enteros (los que cubren DURACION_S más 1 de cola, mínimo 4), con un
+fundido propio de 2,5 s al final; quien lo coloca (apply_plan) lo corta a la duración del montaje.
+Con menos de 4 compases de pieza no entran ni el bombo ni el bajo (empiezan en el compás 4).
 """
+import argparse
 import math
-import numpy as np, wave, sys
+import wave
+
+import numpy as np
+
+_ap = argparse.ArgumentParser(description="Base musical sintetizada (La menor) en WAV mono 44,1 kHz.")
+_ap.add_argument("salida", help="ruta del WAV")
+_ap.add_argument("duracion", type=float, help="segundos que debe cubrir")
+_ap.add_argument("--bpm", type=float, default=112)
+ARGS = _ap.parse_args()
+if ARGS.duracion <= 0 or ARGS.bpm <= 0:
+    _ap.error("la duración y los bpm deben ser > 0")
 
 SR = 44100
-BPM = float(sys.argv[sys.argv.index('--bpm') + 1]) if '--bpm' in sys.argv else 112
+BPM = ARGS.bpm
 BEAT = 60 / BPM
 BAR = BEAT * 4
-BARS = max(4, math.ceil(float(sys.argv[2]) / (60 / BPM * 4)) + 1)
+BARS = max(4, math.ceil(ARGS.duracion / (60 / BPM * 4)) + 1)
 TOTAL = BAR * BARS
 N = int(TOTAL * SR)
 t_all = np.arange(N) / SR
@@ -161,6 +175,6 @@ fade_out = int(2.5*SR); mix[-fade_out:] *= np.linspace(1, 0, fade_out)
 fade_in = int(0.3*SR); mix[:fade_in] *= np.linspace(0, 1, fade_in)
 mix = mix / np.max(np.abs(mix)) * 0.9
 out = (mix * 32767).astype(np.int16)
-with wave.open(sys.argv[1], "wb") as w:
+with wave.open(ARGS.salida, "wb") as w:
     w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes(out.tobytes())
-print("wrote", sys.argv[1], round(TOTAL, 2), "s")
+print("wrote", ARGS.salida, round(TOTAL, 2), "s")

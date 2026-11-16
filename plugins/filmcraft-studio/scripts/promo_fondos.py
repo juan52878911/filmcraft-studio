@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """Fondos de tarjeta (titulo, plano, cap, cierre) con la piel de cada gramática de promo.
 
-Uso: promo_fondos.py DS
+Uso: promo_fondos.py DS [--sin-mattes]
 
 ds_assets.py genera fondos brutalistas (rejilla y bloques de color); las gramáticas de promo necesitan
 los suyos para que las tarjetas que pone FilmCraft (título, cierre) no desentonen con las escenas
 renderizadas por código: brasa con grano y viñeta, plano con rejilla de dibujo, riso con papel y semitono, termo
-con papel y una forma fundida teñida con el gradient map.
-Sobrescribe assets/bg-*.png del DS al tamaño de su lienzo.
+con papel y una forma fundida teñida con el gradient map; tres-fases (vidrio → termo → riso) cierra en
+riso, así que sus tarjetas usan el papel riso.
+Sobrescribe assets/bg-*.png del DS al tamaño de su lienzo y, salvo --sin-mattes, los mattes sólidos
+(blanco y un matte por acento, como ds_assets.py) al mismo tamaño.
 """
+import argparse
 import math
 import sys
 from pathlib import Path
@@ -39,10 +42,12 @@ def plano(ds, W, H, kind):
     pal = ds["paleta"]
     im = Image.new("RGB", (W, H), pal["fondo"])
     d = ImageDraw.Draw(im)
+    fina = pal.get("rejilla_fina") or "#16325A"   # línea fina de la rejilla (el valor histórico de blueprint)
+    gruesa = pal.get("rejilla", fina)
     for x in range(0, W, 40):
-        d.line([x, 0, x, H], fill=pal["rejilla"] if x % 200 == 0 else "#16325A")
+        d.line([x, 0, x, H], fill=gruesa if x % 200 == 0 else fina)
     for y in range(0, H, 40):
-        d.line([0, y, W, y], fill=pal["rejilla"] if y % 200 == 0 else "#16325A")
+        d.line([0, y, W, y], fill=gruesa if y % 200 == 0 else fina)
     if kind in ("titulo", "cierre"):  # cajetín
         bw, bh = int(W * 0.23), int(H * 0.13)
         x0, y0 = W - bw - 40, H - bh - 40
@@ -90,18 +95,40 @@ def termo(ds, W, H, kind):
     return Image.fromarray(tenir(F, mapas(ds), papel(W, H)))
 
 
-GEN = {"temperatura": temperatura, "plano": plano, "riso": riso, "termo": termo}
+GEN = {"temperatura": temperatura, "plano": plano, "riso": riso, "termo": termo, "tres-fases": riso}
+
+
+def generador(ds):
+    g = ds.get("gramatica", "").split("@")[0]
+    if g not in GEN:
+        raise SystemExit(f"gramática '{g}' sin generador de fondos de promo; conocidas: {', '.join(sorted(GEN))}. "
+                         "Para un DS de FilmCraft usa ds_assets.py.")
+    return GEN[g]
+
+
+def mattes(ds, W, H):
+    pal = ds["paleta"]
+    for key, path in ds.get("mattes", {}).items():
+        col = "#FFFFFF" if key == "blanco" else pal.get(key) or pal.get("acento1")
+        Image.new("RGB", (W, H), col).save(path)
+        yield path
 
 
 def main():
-    if len(sys.argv) != 2:
-        sys.exit(__doc__)
-    ds = load_ds(sys.argv[1])
-    gen = GEN[ds["gramatica"].split("@")[0]]
+    ap = argparse.ArgumentParser(description="Fondos (y mattes) de un DS de promo al tamaño de su lienzo.")
+    ap.add_argument("ds")
+    ap.add_argument("--sin-mattes", action="store_true")
+    a = ap.parse_args()
+    ds = load_ds(a.ds)
+    gen = generador(ds)
     W, H = ds["lienzo"]["ancho"], ds["lienzo"]["alto"]
     for kind, path in ds["fondos"].items():
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
         gen(ds, W, H, kind).save(path)
         print(path)
+    if not a.sin_mattes:
+        for path in mattes(ds, W, H):
+            print(path)
 
 
 if __name__ == "__main__":

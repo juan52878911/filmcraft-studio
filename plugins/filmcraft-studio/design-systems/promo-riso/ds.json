@@ -342,11 +342,12 @@
    "congelar": "congelar.wav",
    "vinilo": "vinilo.wav",
    "riser": "riser.wav",
-   "titulo": "titulo.wav"
+   "titulo": "titulo.wav",
+   "despertar": "despertar.wav",
+   "contador": "contador.wav"
   }
  },
  "musica": {
-  "generador": "promo/kindling-v0.20/audio_riso_v.py",
   "bpm": 134,
   "genero": "breakbeat lo-fi con piano eléctrico, vinilo y saturación de cinta",
   "bajo_voz_db": -10,
@@ -412,11 +413,11 @@
  },
  "vocabulario": "kindling, kling, microVM, Firecracker, Apple Silicon, kling-hv, compose, MCP, HOL Guard",
  "promo": {
-  "motor": "código: VHS + Python (PIL, numpy) + ffmpeg; ejemplo en promo/kindling-v0.20/",
+  "motor": "código: grabación real con VHS + escenas en Python (PIL, numpy) fotograma a fotograma a un pipe de ffmpeg; cómo se escribe: skills/promo-codigo/references/motor.md",
   "bpm": 134,
   "rejilla": "todo evento cae en un beat; escenas en compases de 4 beats",
   "material_real": "la terminal es una grabación real con VHS; nunca UI inventada por IA",
-  "timeline": "timeline.py: escenas en beats y REMAP salida->fuente para que cada resultado real caiga en un beat",
+  "timeline": "línea de tiempo en beats (compases de 4) y REMAP salida->fuente para que cada resultado real caiga en un beat",
   "firma": "una sola tinta = congelado: la pasada rosa no imprime, semitono azul parejo, temblor y grano quietos, tape stop",
   "tintas": {
    "rosa": "#FF48B0",

@@ -30,6 +30,20 @@ def measure(ds, role, text, tam=None):
     return (w + 2 * m) / ds["lienzo"]["ancho"], (h + 2 * m) / ds["lienzo"]["alto"]
 
 
+def wrap(text, max_chars):
+    """Parte un texto en líneas de como mucho max_chars (sin partir palabras)."""
+    words, lines, cur = text.split(), [], ""
+    for w in words:
+        if cur and len(cur) + 1 + len(w) > max_chars:
+            lines.append(cur)
+            cur = w
+        else:
+            cur = (cur + " " + w).strip()
+    if cur:
+        lines.append(cur)
+    return lines
+
+
 class Styler:
     def __init__(self, engine, ds):
         self.e = engine
@@ -93,20 +107,9 @@ class Styler:
         self.e.kf(clip, eff, "opacity", [(self.bf(f), v, "linear") for f, v in p["opacidad"]], start)
         self.e.kf(clip, eff, "scale", [(self.bf(f), v, "linear") for f, v in p["escala"]], start)
 
-    def size_of(self, role, text, tam=None):
-        return measure(self.ds, role, text, tam)
-
     def wrap(self, text, max_chars):
-        words, lines, cur = text.split(), [], ""
-        for w in words:
-            if cur and len(cur) + 1 + len(w) > max_chars:
-                lines.append(cur)
-                cur = w
-            else:
-                cur = (cur + " " + w).strip()
-        if cur:
-            lines.append(cur)
-        return lines
+        """Compatibilidad: Styler.wrap(None, …) sigue funcionando; usa la función de módulo wrap()."""
+        return wrap(text, max_chars)
 
     def title(self, text, start, dur, role="titulo", lines=None, pista=None):
         """Aparición por palabras: una capa por palabra en un solo gráfico, alineado a la izquierda."""

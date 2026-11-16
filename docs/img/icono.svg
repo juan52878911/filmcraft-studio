@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Icono de filmcraft-studio: claqueta abstracta cuyo cuerpo es un fotograma con un nodo de design system.
+       Paleta de los DS de promo: brasa #14100D, acento #FF5A1F, escarcha #8FD3FF, papel #F4EFE4. -->
+  <defs>
+    <clipPath id="barra">
+      <rect x="0" y="0" width="600" height="132" rx="28"/>
+    </clipPath>
+  </defs>
+  <rect width="1024" height="1024" rx="228" fill="#14100D"/>
+  <!-- barra de la claqueta, abierta desde la bisagra izquierda -->
+  <g transform="translate(212 330) rotate(-14)">
+    <g clip-path="url(#barra)">
+      <rect width="600" height="132" fill="#F4EFE4"/>
+      <path d="M40 0h110l-80 132H-40zM260 0h110l-80 132H180zM480 0h110l-80 132H400z" fill="#FF5A1F"/>
+    </g>
+  </g>
+  <!-- cuerpo: un fotograma -->
+  <rect x="212" y="480" width="600" height="352" rx="44" fill="#2A211B"/>
+  <rect x="212" y="480" width="600" height="352" rx="44" fill="none" stroke="#F4EFE4" stroke-width="40"/>
+  <!-- nodo de design system: tres tokens (acento, escarcha, papel) que se refieren entre sí -->
+  <path d="M392 656L632 576L632 736Z" fill="none" stroke="#9C8E82" stroke-width="30" stroke-linejoin="round"/>
+  <circle cx="392" cy="656" r="80" fill="#FF5A1F"/>
+  <circle cx="632" cy="576" r="56" fill="#8FD3FF"/>
+  <circle cx="632" cy="736" r="56" fill="#F4EFE4"/>
+</svg>

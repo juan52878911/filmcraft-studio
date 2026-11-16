@@ -1,0 +1,21 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://github.com/juan52878911/filmcraft-studio/plugins/filmcraft-studio/schemas/brief.schema.json",
+ "title": "brief.json: intenciones de un video (brief_infer.py, skill brief-video)",
+ "description": "Cada campo lleva valor, origen y confianza. Referencia: skills/brief-video/SKILL.md.",
+ "type": "object",
+ "required": ["ds", "duracion_s"],
+ "properties": {
+  "$schema": {"type": "string"},
+  "objetivo": {"$ref": "#/$defs/campo"}, "publico": {"$ref": "#/$defs/campo"}, "plataforma": {"$ref": "#/$defs/campo"},
+  "duracion_s": {"$ref": "#/$defs/campo"}, "tono": {"$ref": "#/$defs/campo"}, "obligatorios": {"$ref": "#/$defs/campo"},
+  "evitar": {"$ref": "#/$defs/campo"}, "cta": {"$ref": "#/$defs/campo"}, "ds": {"$ref": "#/$defs/campo"},
+  "idioma": {"$ref": "#/$defs/campo"}, "candidatos": {"type": "array"}
+ },
+ "additionalProperties": true,
+ "$defs": {
+  "campo": {"type": "object", "required": ["valor", "origen"],
+   "properties": {"valor": {}, "origen": {"enum": ["dado", "inferido", "defecto"]},
+                  "confianza": {"type": "number", "minimum": 0, "maximum": 1}, "por": {"type": ["string", "null"]}}}
+ }
+}

@@ -116,11 +116,19 @@ def campo(rgb, invertir, halo, niveles=(0.1, 0.85), T=None):
 
 
 def probe(path):
-    out = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
-                          "stream=width,height,r_frame_rate", "-of", "csv=p=0", path],
-                         capture_output=True, text=True, check=True).stdout.strip().split(",")
-    num, den = out[2].split("/")
-    return int(out[0]), int(out[1]), float(num) / float(den)
+    """(ancho, alto, fps como fracción 'n/d') tal como decodifica ffmpeg: con la rotación del móvil aplicada."""
+    import json as _json
+    j = _json.loads(subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
+                                    "stream=width,height,r_frame_rate:stream_side_data=rotation:stream_tags=rotate",
+                                    "-of", "json", path], capture_output=True, text=True, check=True).stdout)
+    st = j["streams"][0]
+    w, h = int(st["width"]), int(st["height"])
+    rot = int((st.get("tags") or {}).get("rotate", 0) or 0)
+    for sd in st.get("side_data_list") or []:
+        rot = int(sd.get("rotation", rot) or rot)
+    if abs(rot) % 180 == 90:                               # ffmpeg autorrota al decodificar
+        w, h = h, w
+    return w, h, st["r_frame_rate"]
 
 
 def main():
@@ -140,6 +148,8 @@ def main():
     mp = mapas(ds)
     fuentes = [tuple(float(v) for v in f.split(",")) for f in a.fuente]
     niv = tuple(float(x) for x in a.niveles.split(","))
+    if len(niv) != 2 or not 0 <= niv[0] < niv[1] <= 1:
+        ap.error("--niveles necesita negro,blanco con 0 <= negro < blanco <= 1")
     tramos = [tuple(float(x) for x in r.split("-")) for r in a.frio.split(",") if r]
 
     if a.entrada.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
@@ -151,7 +161,9 @@ def main():
         print(a.salida)
         return
 
-    W, H, fps = probe(a.entrada)
+    W, H, rate = probe(a.entrada)
+    n_, d_ = rate.split("/") if "/" in rate else (rate, "1")
+    fps = float(n_) / float(d_)
     piel = papel(W, H)
     T = calor(W, H, fuentes)
     rng = np.random.default_rng(2)
@@ -159,7 +171,7 @@ def main():
     dec = subprocess.Popen(["ffmpeg", "-v", "error", "-i", a.entrada, "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
                            stdout=subprocess.PIPE)
     enc = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
-                            "-r", str(fps), "-i", "-", "-i", a.entrada, "-map", "0:v", "-map", "1:a?",
+                            "-r", rate, "-i", "-", "-i", a.entrada, "-map", "0:v", "-map", "1:a?",
                             "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p", "-c:a", "copy", a.salida],
                            stdin=subprocess.PIPE)
     i = 0
@@ -174,7 +186,9 @@ def main():
         enc.stdin.write(tenir(campo(rgb, a.invertir, a.halo, niv, T), mp, piel, g, frio).tobytes())
         i += 1
     enc.stdin.close()
-    enc.wait()
+    rc_enc, rc_dec = enc.wait(), dec.wait()
+    if rc_enc or rc_dec or i == 0:
+        sys.exit(f"ffmpeg falló (decodificar={rc_dec}, codificar={rc_enc}, fotogramas={i})")
     print(a.salida, i, "fotogramas")
 
 

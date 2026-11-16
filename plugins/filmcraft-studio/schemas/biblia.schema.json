@@ -1,0 +1,26 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://github.com/juan52878911/filmcraft-studio/plugins/filmcraft-studio/schemas/biblia.schema.json",
+ "title": "biblia.json: decisiones cerradas en la preproducción",
+ "description": "Básico. Las rutas (guion, fotogramas, entregables) son relativas a la carpeta de trabajo W/. Referencia: skills/preproduccion/references/biblia.md.",
+ "type": "object",
+ "required": ["estado", "ds", "criterios"],
+ "properties": {
+  "$schema": {"type": "string"},
+  "version": {"type": "integer"},
+  "estado": {"enum": ["borrador", "propuesta", "aprobada", "inferida", "expres"]},
+  "iteracion": {"type": "integer", "minimum": 0},
+  "pedido": {"type": "string"}, "respuestas": {"type": "object"},
+  "referencias": {"type": "array"}, "anti_referencias": {"type": "array"}, "concepto": {"type": "object"},
+  "ds": {"type": "object", "required": ["id"],
+         "properties": {"id": {"type": "string"}, "estado": {"type": "string"}, "gramatica": {"type": "string"},
+                        "fotogramas": {"type": "array", "items": {"type": "string"}}}},
+  "movimientos": {"type": "array"}, "sonido": {"type": "object"}, "guion": {"type": "string"},
+  "motores": {"type": "array", "items": {"type": "object", "required": ["escena", "motor"]}},
+  "entregables": {"type": "array", "items": {"type": "object", "required": ["archivo"]}},
+  "criterios": {"type": "array", "items": {"type": "object", "required": ["id", "que", "como"],
+                "properties": {"id": {"type": "string"}, "que": {"type": "string"}, "como": {"type": "string"}}}},
+  "criticas": {"type": "array"}, "pendientes": {"type": "array"}, "cambios": {"type": "array"},
+  "herramientas": {"type": ["array", "object"], "description": "salida de herramientas.py --json o --doctor --json"}
+ }
+}

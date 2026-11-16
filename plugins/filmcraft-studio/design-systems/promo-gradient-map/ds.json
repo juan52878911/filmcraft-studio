@@ -401,7 +401,6 @@
     }
   },
   "musica": {
-    "generador": "promo/kindling-v0.20/audio_gradmap_v.py",
     "bpm": 134,
     "genero": "UK garage 2-step con pads cálidos desafinados (vibrato lento), stabs de órgano y sub con portamento; congelar = filtro a 180 Hz y campana de cristal",
     "bajo_voz_db": -10,
@@ -467,11 +466,11 @@
   },
   "vocabulario": "kindling, kling, microVM, Firecracker, Apple Silicon, kling-hv, compose, MCP, HOL Guard",
   "promo": {
-    "motor": "código: VHS + Python (PIL, numpy) + ffmpeg; escena en promo/kindling-v0.20/gradmap_v.py; pasada sobre cualquier video: scripts/promo_gradmap.py",
+    "motor": "código: VHS + Python (PIL, numpy) + ffmpeg; escenas en Python como en skills/promo-codigo/references/motor.md; pasada sobre cualquier video: scripts/promo_gradmap.py",
     "bpm": 134,
     "rejilla": "todo evento cae en un beat; escenas en compases de 4 beats",
     "material_real": "la terminal es una grabación real con VHS; nunca UI inventada por IA",
-    "timeline": "timeline_v.py: escenas en beats y REMAP salida->fuente para que cada resultado real caiga en un beat",
+    "timeline": "línea de tiempo en beats (compases de 4) y REMAP salida->fuente para que cada resultado real caiga en un beat",
     "firma": "caliente = corre, frío = congelado: las letras se enfrían hasta el filo y el frío avanza desde un punto; el video arranca en el extremo frío y lo enciende una chispa",
     "mapas": {
       "caliente": [
@@ -717,7 +716,6 @@
     },
     "tecnica": "campo T a 1/4 de resolución (suma de gaussianas móviles); cada glifo muestrea T en su caja: radio = 28·calor, desplazamiento = (−10, +8)·calor, núcleo = 1 − 0,22·T, filo si calor < 0,3; el LUT frío se mezcla por regiones (cold_map), no con un escalar",
     "guion_ejemplo": {
-      "timeline": "promo/kindling-v0.20/timeline_g.py",
       "escenas": [
         "0–8 ignición en oscuro → '0.5s' a sangre → pila DOCKER COMPOSE / EN MICROVMS. / EN TU MAC.",
         "8–22 terminal real: zoom al resultado y pausa, látigo entre filas, congelado de 4 beats quietos, despierta",

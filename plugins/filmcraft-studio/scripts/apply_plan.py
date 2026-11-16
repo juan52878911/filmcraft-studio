@@ -6,15 +6,17 @@ Headless (proyecto NUEVO; nunca toca un .fcproj existente):
 
 En vivo (app abierta con --control 9876), por bloques y fases, para el modo asistido:
     apply_plan.py WORK/compiled.json --live --nuevo WORK/Reel.fcproj      # G0: proyecto nuevo con las pistas del DS
+    apply_plan.py WORK/compiled.json --live --bloques global --fases A    # G4: solo el fondo
     apply_plan.py WORK/compiled.json --live --bloques gancho --fases A,B,C,D
     apply_plan.py WORK/compiled.json --live --bloques '*' --fases B,E    # G5: música y grade
     apply_plan.py WORK/compiled.json --live --deshacer gancho           # borra lo creado para ese bloque
 
 Fases: A cortes y continuidad · B audio (diálogo, SFX, música) · C textos · D transiciones · E grade.
-El estado (ids de clips por segmento y bloque, cajas de texto) va en WORK/estado.json.
+El estado (ids de clips por segmento y bloque, cajas de texto, fases aplicadas) va en WORK/estado.json.
+Idempotente: una fase ya aplicada a un bloque (o a lo global, '*') se salta al repetirla; para rehacerla,
+primero --deshacer BLOQUE. Así G5 (`--bloques '*' --fases B,E`) solo añade la música y el grade.
 """
 import argparse
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -22,7 +24,7 @@ from pathlib import Path
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent))
-from common import SCRIPTS, jload, jsave, load_ds  # noqa: E402
+from common import SCRIPTS, cli, ds_del_compilado, jload, jsave, run  # noqa: E402
 from fcengine import Engine  # noqa: E402
 from fcstyle import Styler  # noqa: E402
 
@@ -41,7 +43,11 @@ class Applier:
         self.st.setdefault("creados", {}).setdefault(bloque, []).extend(clips)
 
     def clip_of(self, sid):
-        return self.st["clips"][sid]
+        try:
+            return self.st["clips"][sid]
+        except KeyError:
+            raise SystemExit(f"{sid}: no hay clip en estado.json; aplica antes la fase A de su bloque "
+                             f"(--bloques {self.segs.get(sid, {}).get('bloque', '?')} --fases A)") from None
 
     def bf(self, f):
         return self.sty.bf(f)
@@ -57,10 +63,11 @@ class Applier:
             cl = e.place(self.ds["fondos"]["plano"], "Fondo", 0, c["duracion"], audio=False)
             self.st.setdefault("clips", {})["fondo"] = {"v": cl[0]}
             self.keep("*", cl)
-        vids = []
+        vids, nuevos = [], set()
         for s in c["segmentos"]:
-            if s["bloque"] not in blocks:
+            if s["bloque"] not in blocks or s["id"] in self.st.setdefault("clips", {}):
                 continue
+            nuevos.add(s["id"])
             if s["tipo"] == "video":
                 span = round(s["out"] - s["in"], 6)
                 cl = e.place(s["path"], "Main", s["start"], span, source_in=s["in"], audio=not s["mute"],
@@ -81,11 +88,11 @@ class Applier:
         if vids:
             e.scale_to_frame(vids)
         for s in c["segmentos"]:
-            if s["bloque"] not in blocks or s["tipo"] != "video":
+            if s["id"] not in nuevos or s["tipo"] != "video":
                 continue
             self.motion(s)
         for cp in c.get("capas", []):
-            if cp["bloque"] in blocks:
+            if cp["bloque"] in blocks and cp["id"] not in self.st["clips"]:
                 self.capa(cp)
 
     def motion(self, s):
@@ -144,20 +151,22 @@ class Applier:
             e.kf(a, "volume", "level", [(0, -60, "linear"), (fade, g, "linear"), (s["dur"] - fade, g, "linear"),
                                         (s["dur"], -60, "linear")], s["start"], s["in"], s["speed"])
         for x in c["sfx"]:
-            if x["bloque"] not in blocks:
+            if x["bloque"] not in blocks or x["id"] in self.st["clips"]:
                 continue
-            cl = e.place(x["path"], x["pista"], x["start"], min(x["dur"], c["duracion"] - x["start"]) if x.get("recortado") else None,
+            # recortado, o un compiled.json anterior cuyo SFX pasa del final: nunca alargar la secuencia
+            corta = x.get("recortado") or x["start"] + x["dur"] > c["duracion"] + 1e-4
+            cl = e.place(x["path"], x["pista"], x["start"], min(x["dur"], c["duracion"] - x["start"]) if corta else None,
                          video=False)
             e.param(cl[0], "volume", "level", x["db"])
             self.st["clips"][x["id"]] = {"a": cl[0]}
             self.keep(x["bloque"], cl)
-        if "*" in blocks:
+        if "*" in blocks and "musica" not in self.st["clips"]:
             m = c["musica"]
             path = m.get("archivo")
             if not path:
                 path = str(self.work / "musica.wav")
-                subprocess.run([sys.executable, str(SCRIPTS / "music_bed.py"), path, str(m["dur"]), "--bpm", str(m["bpm"])],
-                               check=True, capture_output=True)
+                run([sys.executable, str(SCRIPTS / "music_bed.py"), path, str(m["dur"]), "--bpm", str(m["bpm"])],
+                    que="music_bed.py", text=True)
             cl = e.place(path, "Music", 0, m["dur"], video=False)
             e.kf(cl[0], "volume", "level", [(t, db, "linear") for t, db in m["keyframes"]], 0)
             self.st["clips"]["musica"] = {"a": cl[0]}
@@ -247,7 +256,8 @@ class Applier:
     # ---------- E: grade ----------
     def phase_E(self, blocks):
         e, g = self.e, self.c["grade"]
-        ids = [self.clip_of(s)["v"] for s in g["segmentos"] if self.segs[s]["bloque"] in blocks or "*" in blocks]
+        # '*' ya trae todos los ids de bloque; los bloques con E aplicado no llegan aquí (ver main)
+        ids = [self.clip_of(s)["v"] for s in g["segmentos"] if self.segs[s]["bloque"] in blocks and s in self.st["clips"]]
         ids = [i for i in ids if i]
         if not ids:
             return
@@ -260,29 +270,70 @@ class Applier:
                     e.param(cid, eff, p, v)
 
 
+def ids_del_bloque(comp, b):
+    """Claves de estado.json (clips y textos) que pertenecen a un bloque, sacadas del compilado."""
+    ids = set()
+    for k in ("segmentos", "capas", "sfx", "marca", "subtitulos", "textos"):
+        ids.update(x["id"] for x in comp.get(k, []) if x.get("bloque") == b and "id" in x)
+    if b == "*":
+        ids.update(("fondo", "musica"))
+    return ids
+
+
+def pendientes(state, blocks, f):
+    """Bloques de `blocks` a los que aún no se ha aplicado la fase f."""
+    hechas = state.setdefault("fases", {})
+    return {b for b in blocks if f not in hechas.get(b, [])}
+
+
+def deshacer(e, comp, state, b):
+    ids = state.get("creados", {}).pop(b, [])
+    if ids:
+        e.x("edit.clear", {"clips": ids})
+    suyos, borrados = ids_del_bloque(comp, b), set(ids)
+
+    def suyo(k, v):   # por id del compilado, por prefijo o porque su clip se acaba de borrar (sfxN/marcaN se renumeran)
+        # FilmCraft da ids de clip ENTEROS (estado.json real: {"v": 22, "a": 23}); se comparan sin filtrar por tipo
+        return k in suyos or k.startswith(b + ".") or (
+            isinstance(v, dict) and any(v.get(c) in borrados for c in ("v", "a", "clip") if v.get(c) is not None))
+    for k in [k for k, v in state.get("clips", {}).items() if suyo(k, v)]:
+        state["clips"].pop(k)
+    for k in [k for k, v in state.get("textos", {}).items() if suyo(k, v) or k.split(".")[0] in suyos]:
+        state["textos"].pop(k)
+    state.get("fases", {}).pop(b, None)
+    return ids
+
+
 def main():
-    ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser(description="Aplica compiled.json a FilmCraft por fases (headless o en vivo).")
     ap.add_argument("compiled")
     mode = ap.add_mutually_exclusive_group(required=True)
     mode.add_argument("--headless", action="store_true")
     mode.add_argument("--live", action="store_true")
     ap.add_argument("--out", help="headless: ruta del .fcproj nuevo")
     ap.add_argument("--nuevo", help="live: crea un proyecto nuevo y lo guarda en esta ruta")
-    ap.add_argument("--bloques", default="*", help="ids separados por comas; '*' = todos más lo global")
-    ap.add_argument("--fases", default=FASES)
-    ap.add_argument("--deshacer")
+    ap.add_argument("--bloques", default="*", help="ids separados por comas; '*' = todos más lo global; 'global' = solo fondo y música")
+    ap.add_argument("--fases", default=FASES, help="letras de " + FASES + " (p. ej. ABCD o B,E)")
+    ap.add_argument("--deshacer", metavar="BLOQUE", help="borra lo creado para ese bloque ('*' = lo global)")
     ap.add_argument("--work")
     a = ap.parse_args()
+    fases = [f.strip().upper() for f in (a.fases.split(",") if "," in a.fases else list(a.fases)) if f.strip()]
+    malas = [f for f in fases if f not in FASES]
+    if malas or not fases:
+        ap.error(f"--fases: letras válidas {', '.join(FASES)} (recibido {a.fases!r})")
+    if a.headless and not a.out:
+        ap.error("--headless necesita --out")
     comp = jload(a.compiled)
-    ds = load_ds(comp["ds"])
+    ds = ds_del_compilado(comp)
     work = Path(a.work or Path(a.compiled).parent)
     stf = work / "estado.json"
     state = jload(stf) if (stf.exists() and a.live and not a.nuevo) else {"clips": {}, "creados": {}, "textos": {}, "fases": {}}
+    for k in ("clips", "creados", "textos", "fases"):
+        state.setdefault(k, {})
+    state["modo"] = "headless" if a.headless else "live"
     journal = work / "journal.jsonl"
     t0 = time.time()
     if a.headless:
-        if not a.out:
-            sys.exit("--headless necesita --out")
         if Path(a.out).exists():
             sys.exit(f"{a.out} ya existe: el modo headless solo escribe proyectos nuevos")
         e = Engine.headless(journal=journal)
@@ -298,44 +349,59 @@ def main():
         else:
             e.name_tracks(ds["pistas"]["video"], ds["pistas"]["audio"])
         e._items.update(state.get("items", {}))
-    ap_ = Applier(e, comp, ds, work, state)
-    if a.deshacer:
-        ids = state.get("creados", {}).pop(a.deshacer, [])
-        if ids:
-            e.x("edit.clear", {"clips": ids})
-        for k in [k for k, v in state["clips"].items() if k.startswith(a.deshacer + ".")]:
-            state["clips"].pop(k)
-        state.get("fases", {}).pop(a.deshacer, None)
-        e.save()
-        jsave(stf, state)
-        print(f"deshecho {a.deshacer}: {len(ids)} clips")
-        return
-    if a.nuevo and a.bloques == "*" and a.fases == FASES:
-        state["items"] = e._items
-        jsave(stf, state)
-        print(f"proyecto nuevo en {a.nuevo}")
-        return
-    all_blocks = [b["id"] for b in comp["bloques"]]
-    blocks = set(all_blocks + ["*"]) if a.bloques == "*" else set(a.bloques.split(","))
-    for f in a.fases.split(",") if "," in a.fases else list(a.fases):
-        tf = time.time()
-        getattr(ap_, f"phase_{f}")(blocks)
-        for b in blocks:
-            state["fases"].setdefault(b, [])
-            if f not in state["fases"][b]:
-                state["fases"][b].append(f)
-        print(f"fase {f}: {time.time() - tf:.1f} s", flush=True)
-        if a.live:
+    ok = False
+    try:
+        ap_ = Applier(e, comp, ds, work, state)
+        if a.deshacer:
+            conocidos = {b["id"] for b in comp["bloques"]} | {"*"} | set(state.get("creados", {}))
+            if a.deshacer not in conocidos:
+                sys.exit(f"--deshacer: no hay bloque {a.deshacer!r} (hay {', '.join(sorted(conocidos))})")
+            ids = deshacer(e, comp, state, a.deshacer)
             e.save()
-    state["items"] = e._items
-    if a.headless:
-        r = e.save_as(a.out)
-        state["proyecto"] = a.out
-        print(f"guardado {a.out} ({r.get('bytes') if isinstance(r, dict) else r} bytes)")
-    jsave(stf, state)
-    e.close()
+            ok = True
+            print(f"deshecho {a.deshacer}: {len(ids)} clips")
+            return
+        if a.nuevo and a.bloques == "*" and a.fases == FASES:
+            ok = True
+            print(f"proyecto nuevo en {a.nuevo}")
+            return
+        all_blocks = [b["id"] for b in comp["bloques"]]
+        if a.bloques == "*":
+            blocks = set(all_blocks + ["*"])
+        else:   # 'global' = solo lo que no es de ningún bloque (fondo y música)
+            blocks = {"*" if b == "global" else b for b in a.bloques.split(",")}
+        desconocidos = blocks - set(all_blocks) - {"*"}
+        if desconocidos:
+            sys.exit(f"bloques desconocidos: {', '.join(sorted(desconocidos))} (hay {', '.join(all_blocks)})")
+        for f in fases:
+            tf = time.time()
+            pend = pendientes(state, blocks, f)
+            ya = sorted(blocks - pend)
+            if ya:
+                print(f"fase {f}: ya aplicada a {', '.join(ya)}; se salta (para rehacerla: --deshacer BLOQUE)", flush=True)
+            if not pend:
+                continue
+            getattr(ap_, f"phase_{f}")(pend)
+            for b in pend:
+                state["fases"].setdefault(b, []).append(f)
+            print(f"fase {f}: {time.time() - tf:.1f} s", flush=True)
+            if a.live:
+                e.save()
+        if a.headless:
+            r = e.save_as(a.out)
+            state["proyecto"] = a.out
+            print(f"guardado {a.out} ({r.get('bytes') if isinstance(r, dict) else r} bytes)")
+        ok = True
+    finally:
+        # también si una fase falla a mitad: lo creado queda en estado.json y se puede deshacer
+        state["items"] = e._items
+        if not ok:
+            state["ultimo_error"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        if a.live or ok:
+            jsave(stf, state)
+        e.close()
     print(f"listo en {time.time() - t0:.1f} s")
 
 
 if __name__ == "__main__":
-    main()
+    cli(main)

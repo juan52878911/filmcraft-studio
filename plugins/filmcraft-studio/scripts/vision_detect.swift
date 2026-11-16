@@ -12,20 +12,35 @@ func rects(_ obs: [VNDetectedObjectObservation]?) -> [[Double]] {
     }
 }
 
+func emit(_ obj: [String: Any]) {
+    // JSON siempre con JSONSerialization (una comilla en la ruta no rompe la línea)
+    if let d = try? JSONSerialization.data(withJSONObject: obj), let s = String(data: d, encoding: .utf8) {
+        print(s)
+    }
+}
+
 for path in CommandLine.arguments.dropFirst() {
     let url = URL(fileURLWithPath: path)
     guard let src = CGImageSourceCreateWithURL(url as CFURL, nil),
           let img = CGImageSourceCreateImageAtIndex(src, 0, nil) else {
-        print("{\"path\":\"\(path)\",\"error\":\"no se pudo leer\"}")
+        emit(["path": path, "error": "no se pudo leer"])
         continue
+    }
+    // orientación EXIF: las cajas salen en la imagen tal como se ve
+    var orient = CGImagePropertyOrientation.up
+    if let props = CGImageSourceCopyPropertiesAtIndex(src, 0, nil) as? [CFString: Any],
+       let o = props[kCGImagePropertyOrientation] as? UInt32, let oo = CGImagePropertyOrientation(rawValue: o) {
+        orient = oo
     }
     let faces = VNDetectFaceRectanglesRequest()
     let people = VNDetectHumanRectanglesRequest()
     people.upperBodyOnly = false
-    let h = VNImageRequestHandler(cgImage: img, options: [:])
-    try? h.perform([faces, people])
-    let out: [String: Any] = ["path": path, "faces": rects(faces.results), "people": rects(people.results)]
-    if let d = try? JSONSerialization.data(withJSONObject: out), let s = String(data: d, encoding: .utf8) {
-        print(s)
+    let h = VNImageRequestHandler(cgImage: img, orientation: orient, options: [:])
+    do {
+        try h.perform([faces, people])
+    } catch {
+        emit(["path": path, "error": "Vision: \(error.localizedDescription)"])   // no es «sin caras»
+        continue
     }
+    emit(["path": path, "faces": rects(faces.results), "people": rects(people.results)])
 }

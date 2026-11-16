@@ -1,6 +1,6 @@
 # Transiciones con los movimientos de la cámara
 
-Técnica propia probada en el reel #RetoCertEAN. Juan graba con el móvil y hace paneos rápidos entre el ponente, la pantalla y el público. Esos barridos son transiciones gratis, más orgánicas que cualquier matte.
+Técnica propia probada en el reel #RetoCertEAN. Cuando se graba con el móvil se hacen paneos rápidos entre el ponente, la pantalla y el público. Esos barridos son transiciones gratis, más orgánicas que cualquier matte.
 
 ## 1. Detectar los barridos
 

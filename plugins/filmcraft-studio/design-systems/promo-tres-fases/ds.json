@@ -1,0 +1,565 @@
+{
+ "id": "promo-tres-fases",
+ "nombre": "Promo · tres fases (vidrio, termo, riso)",
+ "version": 1,
+ "gramatica": "tres-fases@1",
+ "descripcion": "Tres materias en un video, una por fase del plugin: el vidrio lee (Blender), el calor pregunta (termo@1) y la tinta entrega (riso@1). Las transiciones son de materia: el calor florece desde el anillo y el calor se enfría en semitono.",
+ "match": {
+  "rutas": [
+   "filmcraft-studio",
+   "tres-fases"
+  ],
+  "palabras": [
+   "tres fases",
+   "vidrio",
+   "termo",
+   "riso",
+   "materia",
+   "anillo"
+  ],
+  "paleta_ref": [
+   "#F4EFE4",
+   "#E0168C",
+   "#0078BF",
+   "#FF48B0",
+   "#F4EFE4"
+  ],
+  "flyer": null
+ },
+ "lienzo": {
+  "ancho": 1920,
+  "alto": 1080,
+  "fps": 30,
+  "plataforma": "x-linkedin",
+  "variantes": {
+   "9x16": {
+    "ancho": 1080,
+    "alto": 1920
+   },
+   "vidrio": {
+    "ancho": 1920,
+    "alto": 1920,
+    "nota": "se recorta a los dos formatos; el texto vive en el cuadrado central de 1080"
+   }
+  }
+ },
+ "paleta": {
+  "fondo": "#F4EFE4",
+  "rejilla": "#E2DACA",
+  "oscuro": "#005A8F",
+  "claro": "#F4EFE4",
+  "acento1": "#E0168C",
+  "acento2": "#0078BF",
+  "acento3": "#FF48B0"
+ },
+ "fuentes": {
+  "titular": {
+   "familia": "Helvetica Neue",
+   "estilo": "Condensed Black",
+   "archivo": "/System/Library/Fonts/HelveticaNeue.ttc"
+  },
+  "ui": {
+   "familia": "IosevkaTerm Nerd Font Mono",
+   "estilo": "Bold",
+   "archivo": "~/Library/Fonts/IosevkaTermNerdFontMono-Bold.ttf"
+  },
+  "meta": {
+   "familia": "IosevkaTerm Nerd Font Mono",
+   "estilo": "Bold",
+   "archivo": "~/Library/Fonts/IosevkaTermNerdFontMono-Bold.ttf"
+  }
+ },
+ "marca": {
+  "barra": "kindling v0.20",
+  "handle": "github.com/juan52878911/kindling",
+  "hashtag": "#kindling",
+  "cta": "kling upgrade",
+  "titulo": "DOCKER COMPOSE.\nEN MICROVMS.\nEN TU MAC.",
+  "titulo_pill": "kindling v0.20",
+  "cierre_palabras": [
+   "KINDLING",
+   "v0.20"
+  ],
+  "cierre_linea": "microVMs que se congelan cuando nadie las usa",
+  "cierre_pie": "github.com/juan52878911/kindling"
+ },
+ "pistas": {
+  "video": [
+   "Fondo",
+   "Main",
+   "Tarjeta",
+   "Producto",
+   "Brand",
+   "Captions",
+   "Labels",
+   "Pills",
+   "Tags",
+   "Eco",
+   "Mattes"
+  ],
+  "audio": [
+   "Dialogue",
+   "Hits",
+   "SFX",
+   "Music",
+   "SFX 2"
+  ],
+  "sfx": [
+   "SFX",
+   "SFX 2",
+   "Hits"
+  ]
+ },
+ "roles_texto": {
+  "marca": {
+   "fuente": "ui",
+   "tam": 46,
+   "color": "oscuro",
+   "fondo": null,
+   "pista": "Brand",
+   "pos": [
+    0.1,
+    0.1
+   ],
+   "align": "Left",
+   "anim": "ninguna"
+  },
+  "subtitulo": {
+   "fuente": "titular",
+   "tam": 64,
+   "color": "oscuro",
+   "fondo": null,
+   "pista": "Captions",
+   "pos": [
+    0.5,
+    0.86
+   ],
+   "align": "Center",
+   "anim": "popIn",
+   "max_chars": 32
+  },
+  "etiqueta": {
+   "fuente": "titular",
+   "tam": 62,
+   "color": "oscuro",
+   "fondo": null,
+   "pista": "Labels",
+   "zona": "libre",
+   "align": "Left",
+   "anim": "popIn",
+   "sfx": "despertar"
+  },
+  "eco": {
+   "fuente": "titular",
+   "tam": 150,
+   "colores": [
+    [
+     "oscuro",
+     "fondo"
+    ],
+    [
+     "acento1",
+     "fondo"
+    ]
+   ],
+   "pista": "Labels",
+   "zona": "libre",
+   "align": "Left",
+   "anim": "eco",
+   "frames": 6,
+   "paso_y": 0.1
+  },
+  "pill": {
+   "fuente": "ui",
+   "tam": 46,
+   "color": "oscuro",
+   "fondo": null,
+   "pista": "Pills",
+   "align": "Left",
+   "anim": "ninguna"
+  },
+  "titulo": {
+   "fuente": "titular",
+   "tam": 212,
+   "color": "oscuro",
+   "fondo": null,
+   "pista": "Labels",
+   "x": 0.094,
+   "y": 0.3,
+   "interlinea": 0.9,
+   "max_chars": 16,
+   "align": "Left",
+   "anim": "wordReveal"
+  },
+  "cierre": {
+   "fuente": "titular",
+   "tam": 302,
+   "color": "acento1",
+   "fondo": null,
+   "pista": "Labels",
+   "x": 0.094,
+   "y": 0.32,
+   "interlinea": 1.0,
+   "align": "Left",
+   "anim": "wordReveal",
+   "sfx": "cierre"
+  },
+  "cifra": {
+   "fuente": "titular",
+   "tam": 400,
+   "color": "acento1",
+   "fondo": null,
+   "pista": "Labels",
+   "x": 0.094,
+   "y": 0.55,
+   "align": "Left",
+   "anim": "popIn",
+   "sfx": "contador"
+  },
+  "comando": {
+   "fuente": "ui",
+   "tam": 50,
+   "color": "oscuro",
+   "fondo": null,
+   "pista": "Labels",
+   "zona": "libre",
+   "align": "Left",
+   "anim": "ninguna",
+   "sfx": "tecla"
+  },
+  "meta": {
+   "fuente": "meta",
+   "tam": 30,
+   "color": "oscuro",
+   "fondo": null,
+   "pista": "Tags",
+   "align": "Left",
+   "anim": "ninguna"
+  },
+  "tag": {
+   "fuente": "ui",
+   "tam": 46,
+   "color": "oscuro",
+   "fondo": null,
+   "pista": "Tags",
+   "align": "Left",
+   "anim": "ninguna"
+  },
+  "pie": {
+   "fuente": "ui",
+   "tam": 30,
+   "color": "oscuro",
+   "fondo": null,
+   "pista": "Eco",
+   "pos": [
+    0.5,
+    0.9
+   ],
+   "align": "Center",
+   "anim": "ninguna"
+  }
+ },
+ "animaciones": {
+  "base_fps": 30,
+  "popIn": {
+   "escala": [
+    [
+     0,
+     130
+    ],
+    [
+     8,
+     96
+    ],
+    [
+     12,
+     100
+    ]
+   ],
+   "opacidad": [
+    [
+     0,
+     0
+    ],
+    [
+     3,
+     100
+    ]
+   ]
+  },
+  "wordReveal": {
+   "paso_f": 7,
+   "fade_f": 7,
+   "dy": 60
+  },
+  "eco": {
+   "frames": 6
+  }
+ },
+ "continuidad": {
+  "entrada": {
+   "escala": [
+    104,
+    100
+   ],
+   "f": 10,
+   "fade_f": 0
+  },
+  "jump_cut": {
+   "punch": 106
+  },
+  "salida": {
+   "escala": [
+    100,
+    100
+   ],
+   "f": 0
+  },
+  "zoom_crash": {
+   "escala": [
+    100,
+    120
+   ],
+   "f": 6
+  }
+ },
+ "transiciones": {
+  "preferencia": [
+   "corte"
+  ],
+  "corte": {}
+ },
+ "fondos": {
+  "titulo": "assets/bg-title.png",
+  "plano": "assets/bg-plain.png",
+  "cap": "assets/bg-cap.png",
+  "cierre": "assets/bg-outro.png"
+ },
+ "mattes": {
+  "blanco": "assets/matte-blanco.png",
+  "acento1": "assets/matte-acento1.png",
+  "acento2": "assets/matte-acento2.png",
+  "acento3": "assets/matte-acento3.png"
+ },
+ "sfx": {
+  "dir": "assets/sfx",
+  "nivel_db": -6,
+  "mapa": {
+   "tecla": "tecla.wav",
+   "imprenta": "imprenta.wav",
+   "gancho": "gancho.wav",
+   "cierre": "cierre.wav",
+   "hoja": "hoja.wav",
+   "rotulador": "rotulador.wav",
+   "congelar": "congelar.wav",
+   "vinilo": "vinilo.wav",
+   "riser": "riser.wav",
+   "titulo": "titulo.wav",
+   "despertar": "despertar.wav",
+   "contador": "contador.wav"
+  }
+ },
+ "musica": {
+  "bpm": 134,
+  "genero": "un género por fase en Fa menor: vidrio, ambiente con pulsos (pad filtrado, arpegio de senos, campana de cristal); termo, UK garage 2-step; riso, breakbeat lo-fi con piano eléctrico FM y vinilo; t2 es un tape stop",
+  "bajo_voz_db": -10,
+  "sin_voz_db": 0,
+  "rampa_s": 0.3,
+  "salida_s": 0.8,
+  "nota": "la música del motor de código ya sale masterizada a -14 LUFS: sin voz va a 0 dB"
+ },
+ "grade": {
+  "noise": {
+   "amount": 5,
+   "color": false
+  }
+ },
+ "audio": {
+  "lufs": -14,
+  "pico_dbtp": -1,
+  "fade_corte_f": 2,
+  "dialogo_db": 0
+ },
+ "estructura": {
+  "duracion_s": [
+   20,
+   30
+  ],
+  "orden": [
+   "gancho",
+   "demo_real",
+   "plataforma",
+   "capacidades",
+   "ecosistema",
+   "cierre"
+  ],
+  "gancho_s": [
+   3,
+   4
+  ],
+  "titulo_s": 2,
+  "cierre_s": 3,
+  "foto_f": 0,
+  "fotos_max": 0
+ },
+ "ritmo": {
+  "plano_s": [
+   1.3,
+   9
+  ],
+  "margen_corte_ms": [
+   0,
+   40
+  ],
+  "energia": "alta"
+ },
+ "zonas": {
+  "evitar_y": [
+   [
+    0.74,
+    1
+   ]
+  ],
+  "margen": 0.055,
+  "y_min_bloque": 0.08
+ },
+ "vocabulario": "kindling, kling, microVM, Firecracker, Apple Silicon, kling-hv, compose, MCP, HOL Guard",
+ "promo": {
+  "motor": "Blender Cycles (fase vidrio, motor_blender.py con una escena de anillos propia) + código PIL/numpy (termo y riso) + ffmpeg; cómo se escribe: skills/promo-codigo/references/motor.md",
+  "bpm": 134,
+  "rejilla": "todo evento cae en un beat; escenas en compases de 4 beats",
+  "material_real": "los textos y cifras salen del repo y su CHANGELOG; nada de UI inventada",
+  "timeline": "tres fases en compases de 4 beats a 134 BPM; orden de render: placas → vidrio (Blender) → video",
+  "firma": "la materia cambia y el papel #F4EFE4 se queda: el vidrio lee, el calor florece desde el borde naranja del anillo y se enfría en semitono riso (rosa caliente, azul frío)",
+  "tintas": {
+   "rosa": "#FF48B0",
+   "azul": "#0078BF",
+   "papel": "#F4EFE4",
+   "registro_px": [
+    7,
+    -4
+   ],
+   "golpe_registro_px": [
+    34,
+    -20
+   ]
+  },
+  "animacion": "a dos (15 fps), temblor ±2 px por pasada",
+  "vertical": "titulares ajustados al ancho (fit), franja de rótulos abajo (y > 0.74) y cámara que deja la fila enfocada en y≈0.4",
+  "mapas": {
+   "caliente": [
+    [
+     0.0,
+     "#F4EFE4"
+    ],
+    [
+     0.07,
+     "#D6DAE2"
+    ],
+    [
+     0.2,
+     "#3466E0"
+    ],
+    [
+     0.4,
+     "#FFAC40"
+    ],
+    [
+     0.58,
+     "#F4403A"
+    ],
+    [
+     0.76,
+     "#C41C3E"
+    ],
+    [
+     1.0,
+     "#2E121C"
+    ]
+   ],
+   "frio": [
+    [
+     0.0,
+     "#F4EFE4"
+    ],
+    [
+     0.07,
+     "#CEE0E8"
+    ],
+    [
+     0.2,
+     "#78C4E8"
+    ],
+    [
+     0.4,
+     "#366EDE"
+    ],
+    [
+     0.62,
+     "#223AAA"
+    ],
+    [
+     0.8,
+     "#181E60"
+    ],
+    [
+     1.0,
+     "#0E122C"
+    ]
+   ]
+  },
+  "fases": {
+   "vidrio": {
+    "fondo": "#020202",
+    "polvo": "#2A2A2A",
+    "claro": "#D1D1D5",
+    "tiras": [
+     "#FFFFFF",
+     "#3466E0",
+     "#FFAC40"
+    ],
+    "motor": "Blender Cycles: anillos con dispersión (IOR 1,45/1,50/1,56) delante de una placa emisiva"
+   },
+   "termo": {
+    "mapas": "promo.mapas",
+    "papel": "#E9E4D4",
+    "motor": "código, campo de calor por fuentes"
+   },
+   "riso": {
+    "tintas": {
+     "rosa": "#FF48B0",
+     "azul": "#0078BF",
+     "papel": "#F4EFE4",
+     "registro_px": [
+      7,
+      -4
+     ],
+     "golpe_registro_px": [
+      34,
+      -20
+     ]
+    },
+    "motor": "código, dos tintas que se multiplican"
+   }
+  },
+  "hilo_de_color": {
+   "papel": "#F4EFE4 en las tres fases: apagado (vidrio), calentado (termo), impreso (riso)",
+   "acento": "#FFAC40: tira del estudio de vidrio, borde del calor, cursor del cierre",
+   "paleta_maestra": [
+    "#F4EFE4",
+    "#050505",
+    "#005A8F",
+    "#3466E0",
+    "#FFAC40",
+    "#C41C3E",
+    "#FF48B0"
+   ],
+   "tipografia": "cada fase conserva la suya (Impact de vidrio, Arial Black térmica, Helvetica Condensed riso); Iosevka en todas",
+   "rejilla": "márgenes 112 px (16:9) y 72 px (9:16)"
+  },
+  "transiciones": {
+   "calor_florece": "1 compás: frente de llama radial desde el borde naranja del anillo, bandas del mapa en el borde, detrás el papel",
+   "enfria_a_semitono": "1 compás: la intensidad se cuantiza en puntos; lo caliente queda en rosa, lo frío en azul; el registro se desplaza al final"
+  }
+ }
+}

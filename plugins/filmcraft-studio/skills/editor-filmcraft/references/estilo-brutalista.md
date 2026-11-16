@@ -1,6 +1,6 @@
 # Estilo brutalista (reels del AWS SBG EAN)
 
-Receta aprobada por Juan en los reels "¿Por qué trabajar en Tech?" (paleta cian) y "#RetoCertEAN Sesión 5" (paleta del flyer). Úsala cuando pida "el mismo estilo", "brutalista" o un reel del SBG. Cambia la paleta según el flyer de cada evento.
+Receta aprobada en los reels "¿Por qué trabajar en Tech?" (paleta cian) y "#RetoCertEAN Sesión 5" (paleta del flyer). Úsala cuando pidan "el mismo estilo", "brutalista" o un reel del SBG. Cambia la paleta según el flyer de cada evento.
 
 ## Identidad
 
@@ -9,7 +9,7 @@ Receta aprobada por Juan en los reels "¿Por qué trabajar en Tech?" (paleta cia
   - Sesión 5: navy `#161D27` (fondo y texto oscuro), naranja `#FF9900`, morado `#AD5CFF`, rosa `#FF52EA` y blanco.
   - Charla Tech: blanco `#FEFEFE`, rejilla `#D6D6D6`, cian `#40B4FF` y negro `#010101`.
 - **Tipografías:** IosevkaTerm Nerd Font Mono Heavy para titulares y ecos; Menlo Bold para subtítulos, pills y marca; Menlo Regular para metadatos.
-- **Fondos:** rejilla de celdas de 40 px con "píxeles" de color en las esquinas, generados con PIL (`gen_bgs.py` en la carpeta `04 - Grafica` del proyecto). Variantes `bg-title`, `bg-plain`, `bg-cap` (franja central de color) y `bg-outro`, más mattes sólidos de cada color y uno blanco.
+- **Fondos:** rejilla de celdas de 40 px con "píxeles" de color en las esquinas, generados con PIL (`$S/ds_assets.py <id>`, desde la paleta del DS; `S` viene del SKILL.md). Variantes `bg-title`, `bg-plain`, `bg-cap` (franja central de color) y `bg-outro`, más mattes sólidos de cada color y uno blanco.
 - **Grade del metraje:** contraste +15, negros −12, altas −15, saturación 105, claridad ligera, sharpen suave y grano 6 %.
 
 ## Pistas (de abajo arriba, índices 0-based)
@@ -30,7 +30,7 @@ Los mattes de transición van arriba del todo: tapan también los textos.
 | Tarjeta de nombre | Menlo Bold | ~50 | navy sobre naranja | junto a la persona, sin taparla |
 | Título y cierre | Iosevka Heavy | ~155–215 | blanco | alineado a la izquierda, x 0,07–0,08, aparición por palabras |
 
-## Colocar los pop-ups (regla de Juan)
+## Colocar los pop-ups (regla de la casa)
 
 Los anuncios no tapan a la gente.
 
@@ -67,4 +67,4 @@ Los anuncios no tapan a la gente.
 
 ## Base musical
 
-`promo-tech-bed-112bpm` sintetizada (`synth_bed.py`, ajusta `BARS` a la duración). Va a −18 dB bajo la voz y a −6/−8 dB en el título y el cierre, con salida en rampa.
+`promo-tech-bed-112bpm` sintetizada (`$S/music_bed.py SALIDA.wav DURACION_S [--bpm 112]`). Va a −18 dB bajo la voz y a −6/−8 dB en el título y el cierre, con salida en rampa.

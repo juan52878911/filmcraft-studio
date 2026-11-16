@@ -1,12 +1,20 @@
 {
   "name": "juan-local",
-  "owner": { "name": "Juan" },
+  "owner": {
+    "name": "Juan Bedoya",
+    "url": "https://github.com/juan52878911"
+  },
   "description": "Plugins locales de Juan",
   "plugins": [
     {
       "name": "filmcraft-studio",
       "source": "./plugins/filmcraft-studio",
-      "description": "Director de video: brief, guion, design systems y producción por motores, ensamblada en FilmCraft (headless y asistido)"
+      "version": "0.3.0",
+      "description": "Director de video: preproducción, design systems y producción por motores, ensamblada y verificada en FilmCraft (headless y asistido)",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": ["filmcraft", "video", "design-system", "reels", "promo"],
+      "homepage": "https://github.com/juan52878911/filmcraft-studio"
     }
   ]
 }
