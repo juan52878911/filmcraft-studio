@@ -1,6 +1,6 @@
 # plan.json — EDL de intención
 
-El director escribe la intención; `plan_compile.py` resuelve lo mecánico (límites de palabra, fotogramas, zonas libres, subtítulos, marca, SFX, música, grade). **Todo tiempo de plano va en segundos de la FUENTE** (los de `analisis/transcripcion.md`).
+El director escribe la intención; `plan_compile.py` resuelve lo mecánico (límites de palabra, fotogramas, zonas libres, subtítulos, marca, SFX, música, grade). **Todo tiempo de plano va en segundos de la FUENTE** (los de `transcripcion.md` en la caché de análisis, `<evento>/06 - FilmCraft/analisis/`).
 
 ```json
 {
@@ -69,7 +69,7 @@ El director escribe la intención; `plan_compile.py` resuelve lo mecánico (lím
 | `mute` | Silencia el audio del plano |
 | `nota` | Por qué está (para el crítico) |
 
-**Barrido de cámara** (`"entrada": "barrido"`): pon el `out` del saliente y el `in` del entrante en el pico de sus barridos (`analisis/*.motion.json`, afina con `camera_motion.py fine`). El compilador añade desenfoque de salida y entrada y el whoosh.
+**Barrido de cámara** (`"entrada": "barrido"`): pon el `out` del saliente y el `in` del entrante en el pico de sus barridos (`<caché de análisis>/*.motion.json`, afina con `camera_motion.py fine`). El compilador añade desenfoque de salida y entrada y el whoosh.
 
 ## Textos
 

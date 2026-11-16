@@ -1,0 +1,20 @@
+#!/bin/sh
+# Lanzador de cine: elige el binario de esta plataforma (bin/<so>-<arq>/cine).
+# Si no está, usa una compilación local de motor/ o explica cómo compilarlo.
+d=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+os=$(uname -s | tr '[:upper:]' '[:lower:]')
+arch=$(uname -m)
+case "$arch" in x86_64|amd64) arch=x64 ;; arm64|aarch64) arch=arm64 ;; esac
+case "$os" in mingw*|msys*|cygwin*) os=windows ;; esac
+b="$d/$os-$arch/cine"
+[ "$os" = windows ] && b="$b.exe"
+if [ ! -x "$b" ]; then
+  if [ -x "$d/../motor/target/release/cine" ]; then
+    b="$d/../motor/target/release/cine"
+  else
+    echo "cine: no hay binario para $os-$arch en $d." >&2
+    echo "Compílalo con: sh \"$d/../motor/compilar.sh\" (o nix build en la raíz del repo)" >&2
+    exit 127
+  fi
+fi
+exec "$b" "$@"

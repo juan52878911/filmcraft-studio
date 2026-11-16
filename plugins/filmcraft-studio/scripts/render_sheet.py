@@ -30,7 +30,8 @@ a = ap.parse_args()
 if a.live:
     FC().x("file.save", {})
 
-tmp = Path(tempfile.mkdtemp(prefix="fc_sheet_"))
+_tmp = tempfile.TemporaryDirectory(prefix="fc_sheet_")   # se borra al salir
+tmp = Path(_tmp.name)
 ims = []
 for t in a.seconds:
     png = tmp / f"{t:08.2f}.png"

@@ -1,0 +1,729 @@
+{
+  "id": "promo-gradient-map",
+  "nombre": "Promo de repo · gradient map (kindling v0.20)",
+  "version": 1,
+  "gramatica": "termo@1",
+  "descripcion": "Promo 9:16 en gradient map como imagen térmica de una impresión mal registrada. El mapa (papel → azul → naranja → rojo → granate) es una escala de temperatura y la temperatura es del lugar, no de la letra: cada escena pone fuentes de calor y cada glifo lee el campo. Lejos de una fuente, la letra queda en tinta nítida con un filo rojo de 2 px; cerca, el halo sale corrido (−10, +8 px) y el núcleo se funde a granate. Arranca en oscuro (el extremo frío: todo apagado): el comando se teclea en brasa, el Enter suelta una chispa que cae y enciende un frente de llama que sube y revela el papel. Congelar = las letras se enfrían hasta el filo y el mapa frío avanza desde un punto.",
+  "match": {
+    "rutas": [
+      "kindling",
+      "promo"
+    ],
+    "palabras": [
+      "kindling",
+      "kling",
+      "microVM",
+      "gradient map",
+      "térmico",
+      "thermal",
+      "y2k",
+      "release",
+      "repositorio"
+    ],
+    "paleta_ref": [
+      "#E9E4D4",
+      "#2E121C",
+      "#F4403A",
+      "#3466E0",
+      "#FFAC40"
+    ]
+  },
+  "lienzo": {
+    "ancho": 1080,
+    "alto": 1920,
+    "fps": 30,
+    "plataforma": "reels-shorts-tiktok"
+  },
+  "paleta": {
+    "fondo": "#E9E4D4",
+    "rejilla": "#D6D0BE",
+    "oscuro": "#2E121C",
+    "claro": "#E9E4D4",
+    "acento1": "#C41C3E",
+    "acento2": "#3466E0",
+    "acento3": "#FFAC40"
+  },
+  "fuentes": {
+    "titular": {
+      "familia": "Arial Black",
+      "estilo": "Regular",
+      "archivo": "/System/Library/Fonts/Supplemental/Arial Black.ttf"
+    },
+    "ui": {
+      "familia": "IosevkaTerm Nerd Font Mono",
+      "estilo": "Bold",
+      "archivo": "~/Library/Fonts/IosevkaTermNerdFontMono-Bold.ttf"
+    },
+    "meta": {
+      "familia": "IosevkaTerm Nerd Font Mono",
+      "estilo": "Bold",
+      "archivo": "~/Library/Fonts/IosevkaTermNerdFontMono-Bold.ttf"
+    }
+  },
+  "marca": {
+    "barra": "kindling v0.20",
+    "handle": "github.com/juan52878911/kindling",
+    "hashtag": "#kindling",
+    "cta": "kling upgrade",
+    "titulo": "DOCKER COMPOSE\nEN MICROVMS.\nEN TU MAC.",
+    "titulo_pill": "v0.20 .KLING",
+    "cierre_palabras": [
+      "KINDLING",
+      "v0.20"
+    ],
+    "cierre_linea": "microVMs que se congelan cuando nadie las usa",
+    "cierre_pie": "github.com/juan52878911/kindling"
+  },
+  "pistas": {
+    "video": [
+      "Fondo",
+      "Main",
+      "Tarjeta",
+      "Producto",
+      "Brand",
+      "Captions",
+      "Labels",
+      "Pills",
+      "Tags",
+      "Eco",
+      "Mattes"
+    ],
+    "audio": [
+      "Dialogue",
+      "Hits",
+      "SFX",
+      "Music",
+      "SFX 2"
+    ],
+    "sfx": [
+      "SFX",
+      "SFX 2",
+      "Hits"
+    ]
+  },
+  "roles_texto": {
+    "marca": {
+      "fuente": "ui",
+      "tam": 46,
+      "color": "oscuro",
+      "fondo": null,
+      "pista": "Brand",
+      "pos": [
+        0.1,
+        0.1
+      ],
+      "align": "Left",
+      "anim": "ninguna"
+    },
+    "subtitulo": {
+      "fuente": "titular",
+      "tam": 64,
+      "color": "oscuro",
+      "fondo": null,
+      "pista": "Captions",
+      "pos": [
+        0.5,
+        0.86
+      ],
+      "align": "Center",
+      "anim": "calorEntra",
+      "max_chars": 32
+    },
+    "etiqueta": {
+      "fuente": "titular",
+      "tam": 62,
+      "color": "oscuro",
+      "fondo": null,
+      "pista": "Labels",
+      "zona": "libre",
+      "align": "Left",
+      "anim": "calorEntra",
+      "sfx": "enfoque"
+    },
+    "eco": {
+      "fuente": "titular",
+      "tam": 150,
+      "colores": [
+        [
+          "oscuro",
+          "fondo"
+        ],
+        [
+          "acento1",
+          "fondo"
+        ],
+        [
+          "acento2",
+          "fondo"
+        ]
+      ],
+      "pista": "Labels",
+      "zona": "libre",
+      "align": "Left",
+      "anim": "eco",
+      "frames": 6,
+      "paso_y": 0.1
+    },
+    "pill": {
+      "fuente": "ui",
+      "tam": 46,
+      "color": "claro",
+      "fondo": "oscuro",
+      "pista": "Pills",
+      "align": "Left",
+      "anim": "ninguna",
+      "margen": 18
+    },
+    "titulo": {
+      "fuente": "titular",
+      "tam": 150,
+      "color": "oscuro",
+      "fondo": null,
+      "pista": "Labels",
+      "x": 0.094,
+      "y": 0.3,
+      "interlinea": 1.0,
+      "max_chars": 16,
+      "align": "Left",
+      "anim": "wordReveal"
+    },
+    "cierre": {
+      "fuente": "titular",
+      "tam": 170,
+      "color": "oscuro",
+      "fondo": null,
+      "pista": "Labels",
+      "x": 0.094,
+      "y": 0.32,
+      "interlinea": 1.0,
+      "align": "Left",
+      "anim": "wordReveal",
+      "sfx": "cierre"
+    },
+    "cifra": {
+      "fuente": "titular",
+      "tam": 320,
+      "color": "oscuro",
+      "fondo": null,
+      "pista": "Labels",
+      "x": 0.094,
+      "y": 0.55,
+      "align": "Left",
+      "anim": "calorEntra",
+      "sfx": "enfoque"
+    },
+    "comando": {
+      "fuente": "ui",
+      "tam": 50,
+      "color": "oscuro",
+      "fondo": null,
+      "pista": "Labels",
+      "zona": "libre",
+      "align": "Left",
+      "anim": "ninguna",
+      "sfx": "tecla"
+    },
+    "meta": {
+      "fuente": "meta",
+      "tam": 30,
+      "color": "oscuro",
+      "fondo": null,
+      "pista": "Tags",
+      "align": "Left",
+      "anim": "ninguna"
+    },
+    "tag": {
+      "fuente": "ui",
+      "tam": 46,
+      "color": "oscuro",
+      "fondo": null,
+      "pista": "Tags",
+      "align": "Left",
+      "anim": "ninguna"
+    },
+    "pie": {
+      "fuente": "ui",
+      "tam": 30,
+      "color": "oscuro",
+      "fondo": null,
+      "pista": "Eco",
+      "pos": [
+        0.5,
+        0.9
+      ],
+      "align": "Center",
+      "anim": "ninguna"
+    }
+  },
+  "animaciones": {
+    "base_fps": 30,
+    "popIn": {
+      "escala": [
+        [
+          0,
+          112
+        ],
+        [
+          10,
+          98
+        ],
+        [
+          14,
+          100
+        ]
+      ],
+      "opacidad": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          100
+        ]
+      ]
+    },
+    "wordReveal": {
+      "paso_f": 7,
+      "fade_f": 9,
+      "dy": 0
+    },
+    "eco": {
+      "frames": 6
+    },
+    "calorEntra": {
+      "desenfoque": [
+        [
+          0,
+          48
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "opacidad": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          100
+        ]
+      ],
+      "escala": [
+        [
+          0,
+          106
+        ],
+        [
+          12,
+          100
+        ]
+      ],
+      "nota": "en FilmCraft: Gaussian Blur 48 → 0 en 12 f (aproximación de contagio/desregistro); en código: contagio + desregistro glifo a glifo"
+    }
+  },
+  "continuidad": {
+    "entrada": {
+      "escala": [
+        104,
+        100
+      ],
+      "f": 10,
+      "fade_f": 0
+    },
+    "jump_cut": {
+      "punch": 106
+    },
+    "salida": {
+      "escala": [
+        100,
+        100
+      ],
+      "f": 0
+    },
+    "zoom_crash": {
+      "escala": [
+        100,
+        120
+      ],
+      "f": 6
+    }
+  },
+  "transiciones": {
+    "preferencia": [
+      "corte",
+      "frente_llama",
+      "frente_hielo"
+    ],
+    "corte": {
+      "que": "seco en el beat con SFX de golpe"
+    },
+    "frente_llama": {
+      "que": "termo.movimientos.frente_llama; solo en la ignición y en una escena clave"
+    },
+    "frente_hielo": {
+      "que": "termo.movimientos.hielo_que_sube; solo al congelar"
+    }
+  },
+  "fondos": {
+    "titulo": "assets/bg-title.png",
+    "plano": "assets/bg-plain.png",
+    "cap": "assets/bg-cap.png",
+    "cierre": "assets/bg-outro.png"
+  },
+  "mattes": {
+    "blanco": "assets/matte-blanco.png",
+    "acento1": "assets/matte-acento1.png",
+    "acento2": "assets/matte-acento2.png",
+    "acento3": "assets/matte-acento3.png"
+  },
+  "sfx": {
+    "dir": "assets/sfx",
+    "nivel_db": -6,
+    "mapa": {
+      "tecla": "tecla.wav",
+      "onda": "onda.wav",
+      "gancho": "gancho.wav",
+      "enfoque": "enfoque.wav",
+      "titulo": "titulo.wav",
+      "congelar": "congelar.wav",
+      "despertar": "despertar.wav",
+      "cierre": "cierre.wav",
+      "contador": "contador.wav",
+      "riser": "riser.wav",
+      "chispa": "chispa.wav",
+      "ignicion": "ignicion.wav",
+      "golpe": "golpe.wav",
+      "escaner": "escaner.wav"
+    }
+  },
+  "musica": {
+    "bpm": 134,
+    "genero": "UK garage 2-step con pads cálidos desafinados (vibrato lento), stabs de órgano y sub con portamento; congelar = filtro a 180 Hz y campana de cristal",
+    "bajo_voz_db": -10,
+    "sin_voz_db": 0,
+    "rampa_s": 0.3,
+    "salida_s": 0.8,
+    "nota": "la música del motor de código ya sale masterizada a -14 LUFS: sin voz va a 0 dB"
+  },
+  "grade": {
+    "noise": {
+      "amount": 4,
+      "color": false
+    }
+  },
+  "audio": {
+    "lufs": -14,
+    "pico_dbtp": -1,
+    "fade_corte_f": 2,
+    "dialogo_db": 0
+  },
+  "estructura": {
+    "duracion_s": [
+      20,
+      30
+    ],
+    "orden": [
+      "ignicion",
+      "demo_real",
+      "plataforma",
+      "capacidades",
+      "ecosistema",
+      "cierre_congelado"
+    ],
+    "gancho_s": [
+      3,
+      4
+    ],
+    "titulo_s": 2,
+    "cierre_s": 3,
+    "foto_f": 0,
+    "fotos_max": 0
+  },
+  "ritmo": {
+    "plano_s": [
+      1.3,
+      9
+    ],
+    "margen_corte_ms": [
+      0,
+      40
+    ],
+    "energia": "alta"
+  },
+  "zonas": {
+    "evitar_y": [
+      [
+        0.74,
+        1
+      ]
+    ],
+    "margen": 0.055,
+    "y_min_bloque": 0.08
+  },
+  "vocabulario": "kindling, kling, microVM, Firecracker, Apple Silicon, kling-hv, compose, MCP, HOL Guard",
+  "promo": {
+    "motor": "código: VHS + Python (PIL, numpy) + ffmpeg; escenas en Python como en skills/promo-codigo/references/motor.md; pasada sobre cualquier video: scripts/promo_gradmap.py",
+    "bpm": 134,
+    "rejilla": "todo evento cae en un beat; escenas en compases de 4 beats",
+    "material_real": "la terminal es una grabación real con VHS; nunca UI inventada por IA",
+    "timeline": "línea de tiempo en beats (compases de 4) y REMAP salida->fuente para que cada resultado real caiga en un beat",
+    "firma": "caliente = corre, frío = congelado: las letras se enfrían hasta el filo y el frío avanza desde un punto; el video arranca en el extremo frío y lo enciende una chispa",
+    "mapas": {
+      "caliente": [
+        [
+          0.0,
+          "#E9E4D4"
+        ],
+        [
+          0.07,
+          "#D6DAE2"
+        ],
+        [
+          0.2,
+          "#3466E0"
+        ],
+        [
+          0.4,
+          "#FFAC40"
+        ],
+        [
+          0.58,
+          "#F4403A"
+        ],
+        [
+          0.76,
+          "#C41C3E"
+        ],
+        [
+          1.0,
+          "#2E121C"
+        ]
+      ],
+      "frio": [
+        [
+          0.0,
+          "#E9E4D4"
+        ],
+        [
+          0.07,
+          "#CEE0E8"
+        ],
+        [
+          0.2,
+          "#78C4E8"
+        ],
+        [
+          0.4,
+          "#366EDE"
+        ],
+        [
+          0.62,
+          "#223AAA"
+        ],
+        [
+          0.8,
+          "#181E60"
+        ],
+        [
+          1.0,
+          "#0E122C"
+        ]
+      ]
+    },
+    "campo": {
+      "halo_ganancia": 1.55,
+      "grano_en_degradado": 0.028,
+      "polvo": 0.75,
+      "salpicadura": "#C82832"
+    },
+    "filmcraft": "FilmCraft no tiene gradient map de varios tonos (Tint mapea a dos): monta normal y pasa el export por promo_gradmap.py con --fuente x,y,sigma,ganancia (calor localizado; sin fuentes el halo va en todo y rompe el estilo); los textos de FilmCraft usan calorEntra",
+    "vertical": "titulares ajustados al ancho (fit), franja de rótulos abajo (y > 0.74) y cámara que deja la fila enfocada en y≈0.4"
+  },
+  "termo": {
+    "filosofia": {
+      "idea": "imagen térmica de una impresión mal registrada: la tinta es el objeto frío y nítido; el gradient map solo aparece donde algo lo ha calentado",
+      "reglas": [
+        "escasez: en cada plano está caliente menos del 30 % del texto; el resto va en filo fino",
+        "el calor cae con la distancia a una fuente y cruza las letras a mitad (varía por píxel dentro del glifo)",
+        "desregistro: el halo es una copia corrida (−10, +8 px × calor), no una dilatación centrada",
+        "el núcleo también cambia: caliente = granate y bordes fundidos; frío = tinta casi negra y nítida",
+        "el fondo también se calienta (bruma azul alrededor de las fuentes: 0,2 × T^1,4)",
+        "cada calor tiene causa: una forma, un foco, el cursor, la chispa; nunca glow por todas partes",
+        "el cuerpo de texto va en tinta pura, sin halo",
+        "a sangre: cifras y formas más grandes que la pantalla, recortadas por uno o dos bordes; una forma por plano",
+        "el mapa también vive dentro del glifo caliente: borde naranja, centro rojo-granate, con grano",
+        "una maqueta por idea: nada de plantilla forma-arriba/titular/párrafo/comando repetida entre escenas",
+        "poco texto: titular + un dato + el comando; ≤3 palabras/s; nada de rótulos de plantilla (1/4, líneas con punto medio)",
+        "cortes secos en el beat; solo dos transiciones firma: el frente de llama y el frente de hielo",
+        "cada forma significa algo del producto (brasa, chip, grafo de git, enchufe, escudo); nada de préstamos sin sentido",
+        "el cierre evoluciona: termina congelado, con lo único caliente donde está la acción (el cursor)"
+      ],
+      "anatomia_referencia": {
+        "caliente": {
+          "halo_px": [
+            22,
+            30
+          ],
+          "desplazamiento": [
+            -10,
+            6
+          ],
+          "nucleo": 0.78
+        },
+        "tibia": {
+          "halo_px": [
+            12,
+            16
+          ],
+          "ganancia": 0.6,
+          "desplazamiento": [
+            -6,
+            8
+          ]
+        },
+        "fria": {
+          "halo_px": 0,
+          "filo_px": 2,
+          "filo_valor": 0.62,
+          "filo_exterior": [
+            1,
+            0.16
+          ]
+        },
+        "caida": "la mitad del calor cada ~2 letras desde el lado de la fuente"
+      }
+    },
+    "movimientos": {
+      "ignicion": {
+        "que": "arranque: fondo en el extremo frío (#0B0D16); el comando se teclea en brasa; el Enter suelta una chispa que cae al suelo y enciende un frente de llama con lenguas que sube en dos beats y revela la escena",
+        "chispa_s": [
+          0.42,
+          0.84
+        ],
+        "frente_beats": [
+          2,
+          4
+        ],
+        "banda_px": 380,
+        "lenguas_px": [
+          120,
+          60,
+          18
+        ]
+      },
+      "brasa": {
+        "ganancia": [
+          0.72,
+          0.88
+        ],
+        "hz": 0.7,
+        "que": "fuente fija que respira bajo la palabra activa o una forma"
+      },
+      "foco_recorre": {
+        "sigma_px": 90,
+        "dur_s": 1.2,
+        "curva": "in-out-cubic",
+        "enfria_s": 0.5,
+        "que": "una fuente recorre una línea; las letras se encienden a su paso y se enfrían detrás (comandos, HOL GUARD escaneando)"
+      },
+      "contagio": {
+        "paso_ms": [
+          30,
+          70
+        ],
+        "subida_ms": 250,
+        "caida_s": 0.6,
+        "que": "entrada de titulares: cada letra llega con una llamarada propia y cae a la temperatura del lugar"
+      },
+      "desregistro": {
+        "desde_px": [
+          -26,
+          18
+        ],
+        "a_px": [
+          -18,
+          12
+        ],
+        "dur_s": 0.4,
+        "curva": "out-back 1.3",
+        "que": "el halo nace corrido y reposa corrido × calor; al congelar converge a (0, 0)"
+      },
+      "llamarada": {
+        "pico_ms": 120,
+        "caida_s": 0.5,
+        "que": "pico de calor puntual: cifras, golpes del comando, despertar"
+      },
+      "enfria_a_filo": {
+        "dur_s": 0.6,
+        "curva": "out-expo",
+        "que": "congelar: calor a 0, halo a 0, desplazamiento a (0, 0); queda la letra nítida con su filo"
+      },
+      "hielo_que_sube": {
+        "dur_s": 0.7,
+        "frente_px": 300,
+        "que": "el mapa frío se extiende desde un punto; al despertar retrocede en 0,4 s"
+      },
+      "despertar": {
+        "dur_s": 0.3,
+        "que": "al revés que enfria_a_filo, con una llamarada en el punto donde nació el frío"
+      },
+      "fusion": {
+        "desenfoque_px": 72,
+        "ganancia": 1.45,
+        "formas": [
+          "estrella",
+          "anillo",
+          "píldora",
+          "disco",
+          "escudo"
+        ],
+        "que": "formas de contorno grueso muy desenfocadas que se suman como metabolas; cada una es una fuente de calor (σ ≈ 0,55 R)"
+      },
+      "pulso": {
+        "halo": 1.1,
+        "caida_s": 0.15,
+        "que": "el halo de lo caliente crece en cada beat"
+      },
+      "a_doce": {
+        "fps": 12,
+        "que": "formas y grano a 12 fps; cámara, calor y frentes a 30 fps"
+      },
+      "frente_llama": {
+        "dur_s": 0.8,
+        "banda_px": 380,
+        "que": "transición firma: un frente con lenguas sube y deja la escena nueva; se usa en la ignición y para entrar en la escena clave (HOL GUARD)"
+      },
+      "a_sangre": {
+        "que": "cifras y formas que no caben: '0.5s' a 1,18 × el ancho, '36' y '50' cortadas por el borde izquierdo; las formas asoman por dos bordes",
+        "ganancia_s": 0.4
+      },
+      "latigo": {
+        "dur_s": 0.3,
+        "que": "en la terminal, la cámara salta entre filas de resultado con desenfoque de movimiento vertical; las filas fuera de foco bajan al 10 %"
+      },
+      "titular_rotado": {
+        "que": "el titular gira 90° y corre pegado al borde derecho (una DB por rama); se compone en un lienzo apaisado y se rota"
+      }
+    },
+    "texto": {
+      "titular": "Arial Black ensanchada ×1,16, glifo a glifo con el campo de calor",
+      "cuerpo": "Iosevka sin halo (tinta pura)",
+      "etiqueta": "caja negra con el texto calado (v0.20) y una palabra suelta al lado (.KLING)"
+    },
+    "tecnica": "campo T a 1/4 de resolución (suma de gaussianas móviles); cada glifo muestrea T en su caja: radio = 28·calor, desplazamiento = (−10, +8)·calor, núcleo = 1 − 0,22·T, filo si calor < 0,3; el LUT frío se mezcla por regiones (cold_map), no con un escalar",
+    "guion_ejemplo": {
+      "escenas": [
+        "0–8 ignición en oscuro → '0.5s' a sangre → pila DOCKER COMPOSE / EN MICROVMS. / EN TU MAC.",
+        "8–22 terminal real: zoom al resultado y pausa, látigo entre filas, congelado de 4 beats quietos, despierta",
+        "22–28 '36 ms' a sangre con el chip enorme recortado como fuente de calor",
+        "28–40 tres ideas de 4 beats, cada una con su maqueta: 50 copias (el golden se multiplica), 1 DB por rama (grafo + titular rotado), MCP (titular dentro del enchufe)",
+        "40–46 HOL GUARD entra con el frente de llama; un foco escanea el comando real",
+        "46–56 KINDLING; a los 10 min sin uso se congela solo y solo el cursor sigue caliente"
+      ]
+    }
+  }
+}

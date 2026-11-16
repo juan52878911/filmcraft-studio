@@ -46,6 +46,11 @@ def occupancy(rows, t0, t1, scale=100.0, anchor=(0.5, 0.5)):
     return boxes
 
 
+def sin_vision(rows, t0, t1):
+    """Muestreos del intervalo (± 1 s) en los que el detector falló: ahí «sin caras» no está medido."""
+    return sum(1 for r in rows or [] if r.get("error") and t0 - 1.0 <= r["t"] <= t1 + 1.0)
+
+
 def inter(a, b):
     """Área de intersección entre [x0,y0,x1,y1] y [x,y,w,h]."""
     x0, y0 = max(a[0], b[0]), max(a[1], b[1])
@@ -105,7 +110,8 @@ def main():
     ap.add_argument("--ds")
     ap.add_argument("--punch", type=float, default=100)
     a = ap.parse_args()
-    rows = json.load(open(a.vision))
+    with open(a.vision) as f:
+        rows = json.load(f)
     rows = rows.get("data", rows)
     ds = None
     if a.ds:

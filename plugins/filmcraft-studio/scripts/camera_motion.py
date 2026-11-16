@@ -9,14 +9,21 @@ Convención: dx/dy = desplazamiento del CONTENIDO (no de la cámara), en px/s so
 reducido a 240x135. dx<0: el contenido va a la izquierda (la cámara gira a la derecha).
 OpenCV aplica la rotación del móvil, así que x/y son los del video tal como se ve.
 """
+import argparse
 import sys
 
-import cv2
 import numpy as np
+
+try:
+    import cv2
+except ImportError:
+    sys.exit("falta OpenCV: pip install opencv-python")
 
 
 def frames(path, start=0.0, end=None, every=1):
     cap = cv2.VideoCapture(path)
+    if not cap.isOpened():
+        raise RuntimeError(f"OpenCV no puede abrir {path}")
     fps = cap.get(cv2.CAP_PROP_FPS) or 30
     if start:
         cap.set(cv2.CAP_PROP_POS_MSEC, start * 1000)
@@ -34,8 +41,11 @@ def frames(path, start=0.0, end=None, every=1):
 
 
 def scan_rows(path, thr=40.0):
-    """Ventanas de 0,5 s con movimiento global fuerte: [{t, dx, dy, dif, dir}] (dx/dy en px/s a 240x135)."""
+    """Ventanas de 0,5 s con movimiento global fuerte: [{t, dx, dy, dif, dir}] (dx/dy en px/s a 240x135).
+    Lanza RuntimeError si OpenCV no puede abrir el video (para no cachear «sin barridos» por un fallo)."""
     cap = cv2.VideoCapture(path)
+    if not cap.isOpened():
+        raise RuntimeError(f"OpenCV no puede abrir {path}")
     fps = cap.get(cv2.CAP_PROP_FPS) or 30
     step = max(1, round(fps / 8))
     rows, prev = [], None
@@ -89,11 +99,26 @@ def fine(path, a, b):
     print("(px por fotograma de la fuente; el pico de la barra es el mejor punto de corte)")
 
 
+def main():
+    ap = argparse.ArgumentParser(description="Detecta paneos y barridos de cámara.", epilog=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    s = sub.add_parser("scan", help="ventanas de 0,5 s con movimiento global fuerte")
+    s.add_argument("video")
+    s.add_argument("--min", type=float, default=40.0, help="umbral en px/s")
+    f = sub.add_parser("fine", help="velocidad cada ~0,1 s dentro de una ventana")
+    f.add_argument("video")
+    f.add_argument("inicio", type=float)
+    f.add_argument("fin", type=float)
+    a = ap.parse_args()
+    try:
+        if a.cmd == "scan":
+            scan(a.video, a.min)
+        else:
+            fine(a.video, a.inicio, a.fin)
+    except RuntimeError as ex:
+        sys.exit(f"error: {ex}")
+
+
 if __name__ == "__main__":
-    if len(sys.argv) < 3 or sys.argv[1] not in ("scan", "fine"):
-        sys.exit(__doc__)
-    if sys.argv[1] == "scan":
-        thr = float(sys.argv[sys.argv.index("--min") + 1]) if "--min" in sys.argv else 40.0
-        scan(sys.argv[2], thr)
-    else:
-        fine(sys.argv[2], float(sys.argv[3]), float(sys.argv[4]))
+    main()

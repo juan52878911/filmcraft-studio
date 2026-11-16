@@ -1,0 +1,132 @@
+{
+ "version": 1,
+ "titulo": "filmcraft-studio 0.3",
+ "tipo": "promo-repo",
+ "formato": [
+  "16:9",
+  "9:16"
+ ],
+ "bpm": 134,
+ "ds": "promo-tres-fases",
+ "idea": "Te pregunta antes de hacerlo.",
+ "cta": "/plugin marketplace add juan52878911/filmcraft-studio",
+ "hechos": [
+  {
+   "id": "rondas",
+   "dato": "pregunta por rondas antes de producir",
+   "fuente": "skills/preproduccion/SKILL.md"
+  },
+  {
+   "id": "medidas",
+   "dato": "134,5 BPM · 11,2 cortes/min",
+   "fuente": "preproduccion/referencias/referencias.json (gradient-map.mp4)"
+  },
+  {
+   "id": "preguntas",
+   "dato": "preguntas y respuestas literales",
+   "fuente": "biblia.json respuestas (sesión del 2026-11-04)"
+  },
+  {
+   "id": "motores",
+   "dato": "FilmCraft · Blender · código · pantalla",
+   "fuente": "skills/director-video/references/motores.md"
+  },
+  {
+   "id": "criterios",
+   "dato": "verifica contra los criterios de la biblia",
+   "fuente": "skills/director-video/SKILL.md"
+  },
+  {
+   "id": "version",
+   "dato": "0.3",
+   "fuente": ".claude-plugin/plugin.json"
+  }
+ ],
+ "escenas": [
+  {
+   "id": "leer",
+   "beats": [
+    0,
+    14
+   ],
+   "segundos": [
+    0.0,
+    6.27
+   ],
+   "objetivo": "el plugin lee tus referencias antes de nada",
+   "pantalla": "ANTES DE HACER TU VIDEO, / LEE TUS REFERENCIAS. + medidas (134,5 BPM · 11,2 cortes/min · #E9E4D4)",
+   "motor": "3d"
+  },
+  {
+   "id": "t1",
+   "beats": [
+    14,
+    18
+   ],
+   "segundos": [
+    6.27,
+    8.06
+   ],
+   "objetivo": "la lectura se vuelve pregunta: el calor florece desde el anillo",
+   "pantalla": "—",
+   "motor": "codigo"
+  },
+  {
+   "id": "preguntar",
+   "beats": [
+    18,
+    34
+   ],
+   "segundos": [
+    8.06,
+    15.22
+   ],
+   "objetivo": "te pregunta lo que cambia el video, con opciones",
+   "pantalla": "TE PREGUNTA. / ¿DÓNDE SE PUBLICA? → AMBAS VERSIONES / ¿CÓMO ACABA? → LOS TRES EN EL CTA",
+   "motor": "codigo"
+  },
+  {
+   "id": "t2",
+   "beats": [
+    34,
+    38
+   ],
+   "segundos": [
+    15.22,
+    17.01
+   ],
+   "objetivo": "la respuesta se enfría en tinta",
+   "pantalla": "—",
+   "motor": "codigo"
+  },
+  {
+   "id": "entregar",
+   "beats": [
+    38,
+    56
+   ],
+   "segundos": [
+    17.01,
+    25.07
+   ],
+   "objetivo": "lo produce con el motor de cada escena y lo entrega verificado",
+   "pantalla": "Y TE LO ENTREGA. / 16:9 + 9:16 / FILMCRAFT · BLENDER · CÓDIGO · PANTALLA / VERIFICADO CONTRA LO QUE PEDISTE.",
+   "motor": "codigo"
+  },
+  {
+   "id": "cierre",
+   "beats": [
+    56,
+    64
+   ],
+   "segundos": [
+    25.07,
+    28.66
+   ],
+   "objetivo": "instalar",
+   "pantalla": "filmcraft-studio 0.3 / /plugin marketplace add juan52878911/filmcraft-studio",
+   "motor": "3d+codigo"
+  }
+ ],
+ "nota_9x16": "el vertical quita 8 beats de 'entregar' (la línea de motores) y queda en 56 beats ≈ 25,1 s + cola"
+}

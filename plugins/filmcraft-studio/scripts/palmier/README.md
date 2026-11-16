@@ -12,3 +12,5 @@ Conversores probados en el reel #RetoCertEAN (comparado fotograma a fotograma; a
 4. Compara con `../render_sheet.py` en los mismos segundos que el export de Palmier.
 
 Los fotogramas de Palmier se convierten con los fps de su timeline (`palmier.FPS`); los de FilmCraft, con los de la secuencia (`fc.fps()`).
+
+> **Ejemplo histórico, de un solo uso.** Los `convert_*.py` y `word_reveal.py` ejecutan al importarse (conectan con la app abierta y hacen cambios, incluido `edit.clear`); con `--help` solo muestran su descripción. Llevan constantes del reel original que hay que revisar antes de usarlos con otro proyecto: el prefijo `"PXL_"` y la música `"promo-tech-bed"` (`convert_audio.py`), `track=6` y la fuente Iosevka (`word_reveal.py`), la pista `"Video 11"` (`convert_stills.py`). Algunos usan fotogramas de Palmier como si fueran de FilmCraft: solo es correcto si las dos timelines tienen los mismos fps.

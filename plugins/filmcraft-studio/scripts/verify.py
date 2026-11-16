@@ -8,10 +8,13 @@ Uso:
 No escribe el proyecto: renderiza desde él y, para las hojas sin textos, desde una COPIA temporal con
 las pistas de texto desactivadas. Con --ref compara con otro montaje en los mismos segundos (hojas,
 curva de loudness por segundo, número de cortes y obligatorios). Resultado: OUT/verificacion.json.
+
+La verificación puede FALLAR: si el CLI no renderiza los fotogramas pedidos, el detector de caras falla o
+no hay cifra de loudness, `verificado` es false, `fallos` dice qué no se midió y sale con código 2
+(«0 choques» solo significa algo cuando los fotogramas existen y se miraron).
 """
 import argparse
 import json
-import re
 import subprocess
 import sys
 import tempfile
@@ -20,16 +23,29 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).parent))
-from common import detect, jload, jsave  # noqa: E402
+from common import ErrorExterno, cubre, detect, ds_del_compilado, jload, jsave, parse_ebur128  # noqa: E402
 from fclib import CLI, TPS  # noqa: E402
 
 TEXT_TRACKS = ["Brand", "Captions", "Labels", "Pills", "Tags", "Eco", "Mattes", "Producto", "Tarjeta"]
+
+
+def text_tracks(ds):
+    """Pistas que llevan textos o gráficos encima de la imagen: las fijas más las de los roles del DS."""
+    out = list(TEXT_TRACKS)
+    for r in (ds or {}).get("roles_texto", {}).values():
+        if isinstance(r, dict):
+            for t in ([r.get("pista")] if r.get("pista") else []) + list(r.get("pistas") or []):
+                if t and t not in out:
+                    out.append(t)
+    return out
 
 
 def seq_of(fcproj):
     j = jload(fcproj)
     items = j["project"]["items"]
     seq = [v for v in items.values() if "Sequence" in v.get("kind", {})]
+    if not seq:
+        sys.exit(f"{fcproj}: el proyecto no tiene ninguna secuencia")
     seq = seq[0]["kind"]["Sequence"]
     paths = {}
     for k, v in items.items():
@@ -43,22 +59,32 @@ def clips(track):
     return track.get("clips") or track.get("items") or []
 
 
-def render(project, secs, outdir, scale=0.25):
+def render(project, secs, outdir, scale=0.25, errores=None):
+    """{segundo: png} de los que el CLI renderizó; los que fallan van a `errores` (lista) con su stderr."""
     outdir.mkdir(parents=True, exist_ok=True)
     res = {}
     for t in secs:
         png = outdir / f"{t:08.3f}.png"
+        err = ""
         if not png.exists():
-            subprocess.run([CLI, "--project", str(project), "render", "--seconds", f"{t:.3f}", "--scale", str(scale),
-                            "--out", str(png), "--allow-offline"], capture_output=True)
-        if png.exists():
+            try:
+                r = subprocess.run([CLI, "--project", str(project), "render", "--seconds", f"{t:.3f}", "--scale", str(scale),
+                                    "--out", str(png), "--allow-offline"], capture_output=True, text=True)
+                err = f"código {r.returncode}: {r.stderr.strip()[-200:]}" if r.returncode else ""
+            except OSError as ex:
+                err = f"no se pudo ejecutar {CLI}: {ex}"
+        if png.exists() and png.stat().st_size > 0:
             res[t] = png
+        elif errores is not None:
+            errores.append({"t": t, "proyecto": str(project), "error": err or "el CLI no escribió el fotograma"})
     return res
 
 
 def sheet(frames, out, labels=None, cols=8, boxes=None):
+    """frames: [(t, png)] o [(t, png, etiqueta)]."""
     ims = []
-    for t, p in frames:
+    for fr_ in frames:
+        t, p = fr_[0], fr_[1]
         im = Image.open(p).convert("RGB")
         im.thumbnail((270, 480))
         d = ImageDraw.Draw(im)
@@ -66,7 +92,7 @@ def sheet(frames, out, labels=None, cols=8, boxes=None):
             W, H = im.size
             d.rectangle([b[0] * W, b[1] * H, b[2] * W, b[3] * H], outline=col, width=2)
         d.rectangle([0, 0, 92, 15], fill="black")
-        d.text((3, 2), (labels or {}).get(t, f"{t:.2f}"), fill="yellow")
+        d.text((3, 2), fr_[2] if len(fr_) > 2 else (labels or {}).get(t, f"{t:.2f}"), fill="yellow")
         ims.append(im)
     if not ims:
         return None
@@ -82,23 +108,30 @@ def sheet(frames, out, labels=None, cols=8, boxes=None):
 
 
 def loudness(project, out_wav):
-    r = subprocess.run([CLI, "--project", str(project), "export", str(out_wav), "--allow-offline"], capture_output=True, text=True)
-    if not Path(out_wav).exists():
-        return {"error": r.stderr[-300:]}
-    r = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(out_wav), "-af", "ebur128=peak=true:metadata=1,"
-                        "ametadata=print:key=lavfi.r128.S:file=-", "-f", "null", "-"], capture_output=True, text=True)
-    txt = r.stderr
-    I = re.findall(r"I:\s+(-?[\d.]+) LUFS", txt)
-    LRA = re.findall(r"LRA:\s+(-?[\d.]+) LU", txt)
-    peaks = re.findall(r"Peak:\s+(-?[\d.]+) dBFS", txt)
-    curve, last = [], -1
-    for m in re.finditer(r"pts_time:([\d.]+)\s*\nlavfi\.r128\.S=(-?[\d.inf]+)", r.stdout):
-        t, v = float(m.group(1)), m.group(2)
-        if int(t) > last:
-            last = int(t)
-            curve.append(round(float(v), 1) if "inf" not in v else -70.0)
-    return {"lufs": float(I[-1]) if I else None, "lra": float(LRA[-1]) if LRA else None,
-            "pico_dbtp": float(peaks[-1]) if peaks else None, "curva_s": curve, "wav": str(out_wav)}
+    Path(out_wav).unlink(missing_ok=True)                 # una mezcla vieja no vale como medida nueva
+    try:
+        r = subprocess.run([CLI, "--project", str(project), "export", str(out_wav), "--allow-offline"],
+                           capture_output=True, text=True)
+    except OSError as ex:
+        return {"lufs": None, "error": f"no se pudo ejecutar {CLI}: {ex}"}
+    if r.returncode or not Path(out_wav).exists():
+        return {"lufs": None, "error": f"export de la mezcla falló (código {r.returncode}): {r.stderr.strip()[-300:]}"}
+    return medir_wav(out_wav)
+
+
+def medir_wav(out_wav):
+    """Loudness, pico y curva por segundo de una mezcla. Pide a ffmpeg el corto plazo (S) Y el momentáneo (M):
+    con solo S los 3 primeros segundos salen mudos (S necesita 3 s de señal) aunque el gancho tenga voz."""
+    try:
+        r = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(out_wav), "-af", "ebur128=peak=true:metadata=1,"
+                            "ametadata=print:file=-", "-f", "null", "-"], capture_output=True, text=True)
+    except OSError as ex:
+        return {"lufs": None, "error": f"ffmpeg no disponible: {ex}", "wav": str(out_wav)}
+    res = parse_ebur128(r.stderr, r.stdout)
+    res["wav"] = str(out_wav)
+    if r.returncode or res["lufs"] is None:
+        res["error"] = f"ebur128 no dio loudness (código {r.returncode}): {r.stderr.strip()[-200:]}"
+    return res
 
 
 def overlap(a, b):
@@ -128,7 +161,7 @@ def kf_check(seq):
 
 def cut_check(seq, paths, analisis):
     """Bordes de los clips de diálogo frente a las palabras de la transcripción."""
-    out, n = [], 0
+    out, n, sin = [], 0, []
     for tr in seq["audio_tracks"]:
         if tr.get("name") != "Dialogue":
             continue
@@ -138,6 +171,7 @@ def cut_check(seq, paths, analisis):
                 continue
             pj = Path(analisis) / f"{Path(p).stem}.palabras.json"
             if not pj.exists():
+                sin.append({"clip": c["id"], "fuente": Path(p).name})     # no medido: no cuenta como «0 dentro»
                 continue
             ws = jload(pj)
             a = c["source_in"] / TPS
@@ -148,7 +182,7 @@ def cut_check(seq, paths, analisis):
                     if w["s"] + 0.02 < t < w["e"] - 0.02:
                         out.append({"clip": c["id"], "borde": edge, "t_fuente": round(t, 3), "palabra": w["w"],
                                     "seq_s": round(c["start"] / TPS + (0 if edge == "entrada" else c["duration"] / TPS), 2)})
-    return {"bordes": n, "dentro_de_palabra": out}
+    return {"bordes": n, "dentro_de_palabra": out, "clips_sin_palabras": sin, "medido": not sin}
 
 
 def main_cuts(seq):
@@ -169,43 +203,78 @@ def texts_of(seq):
     return out
 
 
-def no_text_copy(project, tmp):
+def no_text_copy(project, tmp, tracks=TEXT_TRACKS):
+    """Copia del proyecto con las pistas de texto desactivadas; None (y el motivo) si el CLI falla."""
     cp = Path(tmp) / "sin_textos.fcproj"
     seq, _, _ = seq_of(project)
     names = [t.get("name") for t in seq["video_tracks"]]
     lines = [json.dumps({"id": "timeline.setTrack", "params": {"track": f"V{i + 1}", "enabled": False}})
-             for i, n in enumerate(names) if n in TEXT_TRACKS]
+             for i, n in enumerate(names) if n in tracks]
     js = Path(tmp) / "off.jsonl"
     js.write_text("\n".join(lines) + "\n")
-    subprocess.run([CLI, "--project", str(project), "--save-as", str(cp), "run", str(js)], capture_output=True)
-    return cp
+    try:
+        r = subprocess.run([CLI, "--project", str(project), "--save-as", str(cp), "run", str(js)], capture_output=True, text=True)
+    except OSError as ex:
+        return None, f"no se pudo ejecutar {CLI}: {ex}"
+    if r.returncode or not cp.exists():
+        return None, f"copia sin textos falló (código {r.returncode}): {r.stderr.strip()[-200:]}"
+    return cp, None
+
+
+def seq_end(seq):
+    # también el audio: un SFX que pasa del último plano alarga el export (negro al final) y cuenta
+    ends = [(c["start"] + c["duration"]) / TPS for k in ("video_tracks", "audio_tracks")
+            for tr in seq.get(k, []) for c in clips(tr)]
+    return max(ends) if ends else 0.0
 
 
 def main():
-    ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser(description="Verificación headless de un montaje de FilmCraft (sale con 2 si no se pudo medir).")
     ap.add_argument("project")
     ap.add_argument("--compiled", required=True)
     ap.add_argument("--analisis", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--ref")
     ap.add_argument("--segundos", nargs="*", type=float)
+    ap.add_argument("--conservar-temporales", action="store_true", help="no borrar los fotogramas renderizados")
     a = ap.parse_args()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     comp = jload(a.compiled)
-    estado = jload(Path(a.compiled).parent / "estado.json")
+    avisos = []
+    try:
+        ds = ds_del_compilado(comp)
+    except (FileNotFoundError, KeyError, SystemExit) as ex:
+        ds = None
+        avisos.append(f"no cargo el DS {comp.get('ds')!r} ({ex}): uso solo las pistas de texto fijas")
+    tracks = text_tracks(ds)
+    ef = Path(a.compiled).parent / "estado.json"
+    estado = jload(ef) if ef.exists() else {}
     seq, paths, _ = seq_of(a.project)
-    res = {"proyecto": a.project}
-    dur = max((c["start"] + c["duration"]) / TPS for tr in seq["video_tracks"] for c in clips(tr))
+    fallos = []
+    res = {"proyecto": a.project, "modo": estado.get("modo")}
+    if not ef.exists():
+        fallos.append("no hay estado.json junto a compiled.json: no sé dónde están los pop-ups")
+    dur = seq_end(seq)
+    if dur <= 0:
+        fallos.append("la secuencia está vacía")
     res["duracion_s"] = round(dur, 2)
+    dcomp = comp.get("duracion")
+    res["duracion_compilada_s"] = dcomp
+    fotograma = 1 / (comp.get("fps") or 30)
+    if dcomp and dur > dcomp + fotograma + 1e-6:
+        # algo (un SFX, una capa, un eco) pasa del final: el export acaba en negro con la cola del sonido
+        fallos.append(f"la secuencia dura {dur:.2f} s y el compilado {dcomp:.2f} s: algo pasa del final")
     cuts, nmain = main_cuts(seq)
     res["cortes"] = len(cuts)
     res["planos"] = nmain
 
+    tmp_ctx = tempfile.TemporaryDirectory(prefix="fcs_ver_")
+    tmpd = Path(tmp_ctx.name)
+    errores = []
     # hojas: cortes (antes/después) y transiciones
     tc = sorted({round(max(0, t - 0.25), 3) for t in cuts} | {round(t + 0.25, 3) for t in cuts if t + 0.25 < dur})
-    tmpd = Path(tempfile.mkdtemp(prefix="fcs_ver_"))
-    fr = render(a.project, tc, tmpd / "cortes")
+    fr = render(a.project, tc, tmpd / "cortes", errores=errores)
     res["hoja_cortes"] = sheet(sorted(fr.items()), out / "hoja_cortes.jpg", cols=10)
 
     # pop-ups: con textos y sin textos + caras
@@ -215,13 +284,29 @@ def main():
     for k, v in pops:
         mids.setdefault(round(v["start"] + min(v["dur"], 3) / 2, 3), []).append((k, v))
     tm = sorted(mids)
-    fr_t = render(a.project, tm, tmpd / "pop")
-    cp = no_text_copy(a.project, tmpd)
-    fr_n = render(cp, tm, tmpd / "pop_sin")
-    det = detect(list(fr_n.values())) if fr_n else {}
+    fr_t = render(a.project, tm, tmpd / "pop", errores=errores)
+    fr_n, det, vision_ok = {}, {}, not tm
+    if tm:
+        cp, err = no_text_copy(a.project, tmpd, tracks)
+        if cp is None:
+            fallos.append(err)
+        else:
+            fr_n = render(cp, tm, tmpd / "pop_sin", errores=errores)
+        if fr_n:
+            try:
+                det = detect(list(fr_n.values()))
+                vision_ok = True
+            except ErrorExterno as ex:
+                fallos.append(f"detector de caras: {ex}")
     choques, boxes = [], {}
+    medidos = 0
     for t in tm:
-        d = det.get(str(Path(fr_n[t]).resolve()), {}) if t in fr_n else {}
+        if t not in fr_n:
+            continue
+        d = det.get(str(Path(fr_n[t]).resolve()))
+        if d is None or d.get("error"):
+            continue
+        medidos += 1
         faces = [[x, y, x + w, y + h] for x, y, w, h in d.get("faces", [])]
         people = [[x, y, x + w, y + h] for x, y, w, h in d.get("people", [])]
         for k, v in mids[t]:
@@ -233,43 +318,75 @@ def main():
                 choques.append({"texto": v["texto"], "t": t, "cara": round(fo, 2), "persona": round(po, 2)})
     res["hoja_popups"] = sheet(sorted(fr_t.items()), out / "hoja_popups.jpg")
     res["hoja_popups_sin_textos"] = sheet(sorted(fr_n.items()), out / "hoja_popups_sin_textos.jpg", boxes=boxes)
-    res["textos_vs_caras"] = {"popups": len(pops), "momentos": len(tm), "choques": choques}
+    res["textos_vs_caras"] = {"popups": len(pops), "momentos": len(tm), "momentos_renderizados": len(fr_n),
+                              "momentos_medidos": medidos, "medido": vision_ok and medidos == len(tm),
+                              "choques": choques}
+    if medidos < len(tm):
+        fallos.append(f"textos frente a caras: solo se midieron {medidos} de {len(tm)} momentos")
+    if len(fr) < len(tc):
+        fallos.append(f"hoja de cortes: {len(fr)} de {len(tc)} fotogramas")
+    if len(fr_t) < len(tm):
+        fallos.append(f"hoja de pop-ups: {len(fr_t)} de {len(tm)} fotogramas")
 
     res["keyframes"] = kf_check(seq)
     res["cortes_en_palabra"] = cut_check(seq, paths, a.analisis)
+    sinp = res["cortes_en_palabra"]["clips_sin_palabras"]
+    if sinp:
+        fallos.append(f"cortes en palabra: {len(sinp)} clip(s) de diálogo sin <fuente>.palabras.json en {a.analisis} "
+                      f"({', '.join(sorted({x['fuente'] for x in sinp})[:3])})")
     res["audio"] = loudness(a.project, out / "mezcla.wav")
+    if res["audio"].get("lufs") is None:
+        fallos.append(f"loudness: {res['audio'].get('error', 'sin cifra')}")
     res["cobertura"] = comp.get("cobertura", {})
 
     if a.ref:
         rseq, rpaths, _ = seq_of(a.ref)
         rcuts, rn = main_cuts(rseq)
-        rdur = max((c["start"] + c["duration"]) / TPS for tr in rseq["video_tracks"] for c in clips(tr))
+        rdur = seq_end(rseq)
         secs = a.segundos or [round(x, 2) for x in [1.5, 4.5, 7.5, 11.0, 13.8, 16.0, 19.5, 24.0, 27.0, 30.0, 34.0,
                                                     36.5, 40.0, 44.0, 49.0, 52.5, 55.0] if x < max(dur, rdur)]
-        fa = render(a.project, [s for s in secs if s < dur], tmpd / "cmp_a")
-        fb = render(a.ref, [s for s in secs if s < rdur], tmpd / "cmp_b")
+        fa = render(a.project, [s for s in secs if s < dur], tmpd / "cmp_a", errores=errores)
+        fb = render(a.ref, [s for s in secs if s < rdur], tmpd / "cmp_b", errores=errores)
         pares = []
         for s in secs:
             if s in fb:
-                pares.append((s - 0.0001, fb[s]))
+                pares.append((s, fb[s], f"REF {s:.1f}"))
             if s in fa:
-                pares.append((s, fa[s]))
-        labels = {t: (f"REF {t + 0.0001:.1f}" if abs(t - round(t, 2)) > 1e-6 else f"AUTO {t:.1f}") for t, _ in pares}
-        res["hoja_comparacion"] = sheet(pares, out / "hoja_comparacion.jpg", labels=labels, cols=8)
+                pares.append((s, fa[s], f"AUTO {s:.1f}"))
+        res["hoja_comparacion"] = sheet(pares, out / "hoja_comparacion.jpg", cols=8)
         ra = loudness(a.ref, out / "mezcla_ref.wav")
-        rtexts = " ".join(texts_of(rseq)).lower()
+        pa, pb = [s for s in secs if s < dur], [s for s in secs if s < rdur]
+        if len(fa) < len(pa) or len(fb) < len(pb):
+            fallos.append(f"comparación con la referencia: {len(fa)} de {len(pa)} fotogramas propios y "
+                          f"{len(fb)} de {len(pb)} de la referencia")
+        if ra.get("lufs") is None:
+            fallos.append(f"loudness de la referencia: {ra.get('error', 'sin cifra')}")
+        rtexts = texts_of(rseq)
         obl = list(res["cobertura"].keys())
         res["referencia"] = {"proyecto": a.ref, "duracion_s": round(rdur, 2), "cortes": len(rcuts), "planos": rn,
-                             "audio": ra, "obligatorios": {o: (max(o.lower().split(), key=len) in rtexts) for o in obl}}
+                             "audio": ra, "obligatorios": {o: cubre(o, rtexts) for o in obl}}
         res["hoja_curvas"] = curves(res["audio"].get("curva_s", []), ra.get("curva_s", []), out / "curvas_lufs.png")
+    if a.conservar_temporales:
+        res["temporales"] = str(tmpd)
+    else:
+        tmp_ctx.cleanup()
+    res["errores_render"] = errores[:20]
+    res["avisos"] = avisos
+    res["fallos"] = fallos
+    res["verificado"] = not fallos
     jsave(out / "verificacion.json", res)
     a_ = res["audio"]
-    print(json.dumps({"duracion_s": res["duracion_s"], "cortes": res["cortes"], "lufs": a_.get("lufs"),
-                      "pico_dbtp": a_.get("pico_dbtp"), "choques_texto": len(choques),
+    print(json.dumps({"estado": "ok" if res["verificado"] else "error", "fallos": fallos,
+                      "duracion_s": res["duracion_s"], "cortes": res["cortes"], "lufs": a_.get("lufs"),
+                      "pico_dbtp": a_.get("pico_dbtp"),
+                      "choques_texto": len(choques) if res["textos_vs_caras"]["medido"] else None,
                       "cortes_dentro_de_palabra": len(res["cortes_en_palabra"]["dentro_de_palabra"]),
                       "keyframes_fuera": res["keyframes"]["n_fuera"],
                       "ref": {k: res["referencia"][k] for k in ("duracion_s", "cortes")} if a.ref else None,
                       "ref_lufs": res["referencia"]["audio"].get("lufs") if a.ref else None}, ensure_ascii=False))
+    if fallos:
+        print("verificación incompleta: " + "; ".join(fallos), file=sys.stderr)
+        sys.exit(2)
 
 
 def curves(a, b, out):

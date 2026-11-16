@@ -19,10 +19,10 @@ FilmCraft 0.8.x: NLE de código abierto en Rust (github.com/storytold/filmcraft,
 
 | Modo | Cómo | Cuándo |
 |---|---|---|
-| App en vivo | `open -a FilmCraft --args --control 9876`; MCP de usuario `filmcraft` (`filmcraft-cli mcp --bridge 127.0.0.1:9876`) o `scripts/fclib.py` (socket JSON por líneas) | El usuario mira la ventana; ediciones interactivas |
+| App en vivo | `open -a FilmCraft --args --control 9876`; MCP `filmcraft` del plugin o de usuario (`$FC mcp --bridge 127.0.0.1:9876`) o `$S/fclib.py` (socket JSON por líneas) | El usuario mira la ventana; ediciones interactivas |
 | Headless | `filmcraft-cli --project P.fcproj [--save \| --save-as X] exec <id> '<json>'`, `run script.jsonl`, `inspect`, `render`, `export` | Lotes, verificación y renders sin tocar la ventana |
 
-- El CLI está en `~/.local/bin/filmcraft-cli`. Si `claude` es una función o alias de shell, llama al binario directo (`~/.local/bin/claude`) para `claude mcp …`.
+- El CLI es `$FC` = `${FILMCRAFT_CLI:-filmcraft-cli}` (en el PATH, o la ruta que tenga `FILMCRAFT_CLI`; `S` y `FC` vienen del SKILL.md). Si `claude` es una función o alias de shell, llama al binario directo para `claude mcp …`.
 - Con la app abierta, `render` del CLI con `--bridge` no funciona: guarda (`file.save`) y renderiza en headless con `--project`.
 - No escribas el `.fcproj` en headless mientras la app lo tiene abierto, porque su autoguardado lo pisa.
 - El proyecto es JSON legible (`format: filmcraft.project`). Puedes leerlo para verificar keyframes y estructura. Edítalo solo mediante comandos.

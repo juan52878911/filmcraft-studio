@@ -56,7 +56,7 @@ En modo asistido se pregunta lo que tenga poca confianza. En headless se usa el 
 **Subagentes**
 - `analista-material`: momentos con peso y cita.
 - `director-montaje`: elige el DS, completa el brief y escribe `plan.json`.
-- `critico`: veredicto y los 5 arreglos a hacer primero.
+- `critico-juicio`: el único crítico con IA. Juzga historia, copy, originalidad y los criterios de juicio, con los ejes medidos por `cine puntuar` como evidencia y techo; `cine nota` da el veredicto y los 5 arreglos.
 
 **Scripts**
 - `fcengine.py`
@@ -65,7 +65,7 @@ En modo asistido se pregunta lo que tenga poca confianza. En headless se usa el 
 - `ds_from_image.py`
 - `ds_assets.py`
 - `ds_preview.py`
-- `ds_validate.py`
+- `bin/cine` (Rust, `motor/`): `validar-ds`, `elegir-ds`, `medir-video`, `criterios`, `puntuar`, `nota`, `ab`.
 - `plan_compile.py`
 - `apply_plan.py`
 - `music_bed.py`
@@ -85,7 +85,7 @@ Se reutilizan `fclib`, `transcribe_fc`, `camera_motion`, `render_sheet`, los `co
 6. **Zonas libres** por pop-up.
 7. **Proyecto nuevo** en `06 - FilmCraft/auto/…`. Nunca se toca el `.fcproj` existente.
 8. **Aplicar por fases** A–E: cortes y continuidad; audio y SFX; textos; transiciones; grade.
-9. **Verificar** (como máximo 3 pasadas): hojas con y sin textos, texto frente a caras, keyframes, cortes en palabra, `.wav` con LUFS y pico real, duración. Termina con el `critico`.
+9. **Verificar** (como máximo 3 pasadas): hojas con y sin textos, texto frente a caras, keyframes, cortes en palabra, `.wav` con LUFS y pico real, duración. Después `cine puntuar` → `critico-juicio` → `cine nota` (veredicto y 5 arreglos; Regresión vuelve a la mejor versión).
 10. **`informe.md`** con las decisiones D1–D3, las evidencias y las preguntas pendientes. Sin export salvo con `entregar`.
 
 ## Flujo de entrada conversacional (v0.1, pedido por Juan; manda sobre el orden anterior)
@@ -97,7 +97,7 @@ El punto de entrada es `/filmcraft-studio:editar <carpeta>`, o pedirlo en lengua
    - Si hay design systems en el catálogo, muéstralos como opciones: nombre, descripción en una línea y miniatura de vista previa. Suma "crear uno nuevo".
    - Si no hay ninguno, o el usuario elige crear: que **describa** cómo lo quiere (también vale un flyer, un logo o una referencia). El plugin propone un DS (piel + gramática base) y genera la **vista previa** (`ds_preview`: fondos, mattes, cada rol de texto sobre un fotograma real del material).
    - **Ciclo de aprobación:** el usuario lo ve y lo aprueba, o pide cambios (colores, tipografía, tamaños, tono de las animaciones). Se itera hasta que lo apruebe.
-   - **Al aprobarlo pasa al catálogo** (`${CLAUDE_PLUGIN_DATA}/design-systems/<id>/` o una carpeta de catálogo configurable con `userConfig`) y queda como opción para los siguientes videos. El DS `sbg-brutalista-s5` viene precargado.
+   - **Al aprobarlo pasa al catálogo** (`${CLAUDE_PLUGIN_DATA}/design-systems/<id>/`, o la carpeta que diga `FILMCRAFT_DS_CATALOGO`; los comandos exportan `CLAUDE_PLUGIN_DATA` antes de llamar a los scripts, porque en Bash no está; sin ella, los scripts caen en `~/.cache/filmcraft-studio/`) y queda como opción para los siguientes videos. El DS `sbg-brutalista-s5` viene precargado.
 3. **Intenciones.** Brief con objetivo, público, plataforma, duración, tono, obligatorios y llamada a la acción. Se proponen los valores inferidos del material para que el usuario los confirme o cambie.
 4. **Edición.** El usuario elige el modo:
    - **asistido:** puertas G3–G7 de abajo;
@@ -131,16 +131,22 @@ Esto entra en el MVP: catálogo de DS, creación desde una descripción o un fly
 
 ```
 filmcraft-studio/                      ← marketplace local
-├── .claude-plugin/marketplace.json    {"name":"juan-local","owner":{"name":"Juan"},"plugins":[{"name":"filmcraft-studio","source":"./plugins/filmcraft-studio"}]}
+├── .claude-plugin/marketplace.json    {"name":"juan-local", …, "plugins":[{"name":"filmcraft-studio","source":"./plugins/filmcraft-studio","version":"0.3.0"}]}
+├── AGENTS.md                          guía para agentes fuera de Claude Code
+├── CHANGELOG.md
 ├── docs/diseno.md
 └── plugins/filmcraft-studio/
     ├── .claude-plugin/plugin.json
-    ├── .mcp.json                      filmcraft: ~/.local/bin/filmcraft-cli mcp --bridge 127.0.0.1:9876 (ruta absoluta)
-    ├── skills/{editor-filmcraft,design-system-video,brief-video,montaje-headless,montaje-asistido}/
-    ├── commands/*.md
-    ├── agents/{analista-material,director-montaje,critico}.md
-    ├── scripts/*.py
-    └── design-systems/sbg-brutalista-s5/{ds.json,assets/}
+    ├── .mcp.json                      filmcraft: sh -c → $FILMCRAFT_CLI, filmcraft-cli del PATH o ~/.local/bin/filmcraft-cli; mcp --bridge 127.0.0.1:${FILMCRAFT_PORT:-9876}
+    ├── requirements.txt
+    ├── skills/{director-video,preproduccion,promo-codigo,editor-filmcraft,design-system-video,brief-video,montaje-headless,montaje-asistido}/
+    ├── commands/*.md                  atajos del usuario (disable-model-invocation); doctor es el diagnóstico
+    ├── agents/{analista-material,director-montaje,critico-juicio}.md
+    ├── bin/cine, motor/              motor determinista en Rust (binarios en bin/<so>-<arq>/, fuera de git)
+    ├── scripts/*.py, scripts/blender/, scripts/palmier/
+    ├── schemas/{ds,brief,biblia,guion,plan}.schema.json
+    ├── tests/                         pytest (motor falso, sin FilmCraft): python3 -m pytest tests -q
+    └── design-systems/{sbg-brutalista-s5,promo-*}/{ds.json,assets/}
 ```
 
 Instalación:
@@ -158,7 +164,31 @@ Trampas:
 - El estado va en `${CLAUDE_PLUGIN_DATA}`.
 - Ningún nombre puede empezar por `claude-`.
 - `~/.claude/skills/editor-filmcraft` quedaría duplicada: retirarla o renombrarla al instalar.
-- Herramientas MCP del plugin: `mcp__plugin_filmcraft-studio_filmcraft__*`.
+- Herramientas MCP del plugin: `mcp__plugin_filmcraft-studio_filmcraft__*`. Si además hay un MCP de usuario llamado `filmcraft`, sus herramientas salen como `mcp__filmcraft__*`; las skills solo dicen «el MCP `filmcraft`», así que valen los dos.
+- Una skill y un comando con el mismo nombre chocan (los dos se registran como `filmcraft-studio:<nombre>`); por eso `preproduccion` es solo skill.
+- Los comandos llevan `disable-model-invocation: true`: así no gastan el presupuesto del listado de skills y el modelo entra por las skills.
+
+## Director generalista y motores (v0.2)
+
+El plugin ya no se limita a montar material de cámara. La skill `director-video` es la entrada para cualquier video: brief → tipo → guion por escenas con hechos y fuentes → DS → producción por escena → ensamblado en FilmCraft → verificación → entrega.
+
+- **FilmCraft es la mesa de montaje final.** Cualquier escena, venga del motor que venga, es una fuente con análisis (`--sin-vision` si no hay personas) y un bloque de `plan.json`. Así los subtítulos, la marca, los SFX, la música con ducking, el grade y la verificación son iguales para todos.
+- **Motores:**
+  - `camara`: el pipeline de siempre;
+  - `codigo`: Python con el esqueleto de `skills/promo-codigo/references/motor.md`, o Remotion, HyperFrames o Manim;
+  - `pantalla`: VHS, Screen Studio o Cap;
+  - `ia`: solo relleno, de imagen a video y con permiso;
+  - `foto`, `tarjeta`, voz y música.
+- **Gramáticas de promo** (`temperatura@1`, `plano@1`, `riso@1`) en DS del catálogo:
+  - mismo esquema;
+  - pistas canónicas;
+  - la clave `promo` para el render por código;
+  - fondos propios (`promo_fondos.py`), kit de SFX (`promo_sfx.py`) y vista previa desde el render (`promo_preview.py`).
+- **Lo que destapó la prueba de ensamblado:**
+  - `apply_plan` necesita las pistas canónicas (`Main`, `Dialogue`…);
+  - las tarjetas usan los roles `tag`, `meta` y `pie` (ahora los exige `ds_validate.py`);
+  - el rol `cierre` necesita `x` a la izquierda;
+  - la música ya masterizada va con `sin_voz_db` = 0.
 
 ## MVP de esta iteración
 

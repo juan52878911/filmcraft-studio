@@ -3,6 +3,15 @@
 
 Uso: ds_preview.py DS [--out preview.png] [--frame FOTO_O_FOTOGRAMA.jpg] [--fc]
 
+Sin --out la lámina va a <datos>/previews/<id>/preview.png (<datos> = $CLAUDE_PLUGIN_DATA o
+~/.cache/filmcraft-studio): nunca escribe en la carpeta del DS, que puede ser la del plugin o tener la
+preview.png real de un promo. ds_studio pasa siempre --out.
+
+Las maquetas salen al lienzo del DS (9:16, 16:9…). Los roles que el DS no tenga (p. ej. `escalon` en los DS
+de promo) no se dibujan. En un DS de promo (clave `promo`) estas maquetas solo enseñan paleta y tipografía:
+la vista previa real sale de un render (`promo_preview.py DS VIDEO`) o de fotogramas sueltos de la escena
+(`python3 <escena>.py … 0.6,9.2`: los segundos como último argumento).
+
 - Lámina PIL (rápida): paleta con roles y contrastes, cuatro maquetas 9:16 (título, contenido con
   marca + etiqueta + subtítulo, eco, cierre) dibujadas con las fuentes y tamaños del DS, y el flyer.
 - --fc además monta la tarjeta de título y un plano de contenido en un proyecto FilmCraft temporal
@@ -16,15 +25,22 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageOps
 
 sys.path.insert(0, str(Path(__file__).parent))
-from common import color, load_ds, pil_font  # noqa: E402
+from common import DATA, color, load_ds, pil_font  # noqa: E402
 from ds_from_image import contrast  # noqa: E402
 from fcstyle import Styler  # noqa: E402
 
-W, H = 1080, 1920
+W, H = 1080, 1920   # por defecto; cada maqueta usa el lienzo de su DS (size)
+
+
+def size(ds):
+    lz = ds.get("lienzo") or {}
+    return int(lz.get("ancho") or W), int(lz.get("alto") or H)
 
 
 def block(d, ds, role, text, cx, cy, fill_override=None, align=None, scale=1.0):
-    r = ds["roles_texto"][role]
+    r = ds["roles_texto"].get(role)
+    if not r or not text:                                  # rol que este DS no tiene: no se dibuja
+        return
     f = pil_font(ds["fuentes"][r["fuente"]], r["tam"] * scale)
     lines = text.split("\n")
     bbs = [d.textbbox((0, 0), ln, font=f) for ln in lines]
@@ -48,11 +64,16 @@ def block(d, ds, role, text, cx, cy, fill_override=None, align=None, scale=1.0):
 
 
 def bg(ds, key):
-    p = ds["fondos"].get(key)
-    return Image.open(p).convert("RGB").resize((W, H)) if p and Path(p).exists() else Image.new("RGB", (W, H), ds["paleta"]["fondo"])
+    W, H = size(ds)
+    p = ds.get("fondos", {}).get(key)
+    if p and Path(p).exists():
+        im = Image.open(p).convert("RGB")
+        return im if im.size == (W, H) else ImageOps.fit(im, (W, H))   # sin deformar si el asset no casa
+    return Image.new("RGB", (W, H), ds["paleta"]["fondo"])
 
 
 def mock_title(ds):
+    W, H = size(ds)
     im = bg(ds, "titulo")
     d = ImageDraw.Draw(im)
     m = ds["marca"]
@@ -61,20 +82,22 @@ def mock_title(ds):
     t = m.get("titulo", "TÍTULO DEL EVENTO")
     lines = t.split("\n") if "\n" in t else Styler.wrap(None, t, r.get("max_chars", 12))
     tam = r["tam"]
+    rx, ry = r.get("x", 0.08), r.get("y", 0.3)
     f = pil_font(ds["fuentes"][r["fuente"]], tam)
     widest = max(f.getlength(ln) for ln in lines)
-    if widest > W * (1 - 2 * r["x"]):                      # igual que Styler.title: encaja en el ancho
-        tam = tam * W * (1 - 2 * r["x"]) / widest
+    if widest > W * (1 - 2 * rx):                          # igual que Styler.title: encaja en el ancho
+        tam = tam * W * (1 - 2 * rx) / widest
         f = pil_font(ds["fuentes"][r["fuente"]], tam)
-    y = H * r["y"]
+    y = H * ry
     for ln in lines:
-        d.text((W * r["x"], y), ln, font=f, fill=color(ds, r["color"]))
+        d.text((W * rx, y), ln, font=f, fill=color(ds, r.get("color", "claro")))
         y += tam * r.get("interlinea", 1.25)
     block(d, ds, "pill", m.get("titulo_pill", "PILL"), W * 0.5, H * 0.72)
     return im
 
 
 def mock_content(ds, frame):
+    W, H = size(ds)
     if frame and Path(frame).exists():
         im = ImageOps.fit(Image.open(frame).convert("RGB"), (W, H))
     else:
@@ -88,24 +111,27 @@ def mock_content(ds, frame):
 
 
 def mock_eco(ds):
+    W, H = size(ds)
     im = bg(ds, "plano")
     d = ImageDraw.Draw(im)
-    r = ds["roles_texto"]["eco"]
-    for i, (tc, fc) in enumerate(r["colores"]):
+    r = ds["roles_texto"].get("eco") or {}
+    pares = r.get("colores") or [[r.get("color", "claro"), r.get("fondo")]]
+    for i, (tc, fc) in enumerate(pares):
         block(d, ds, "eco", "100 USD", W * 0.5, H * (0.22 + i * r.get("paso_y", 0.125)), fill_override=(tc, fc))
     block(d, ds, "subtitulo", "nos dan 100 dólares.", W * 0.5, H * 0.78)
     return im
 
 
 def mock_outro(ds):
+    W, H = size(ds)
     im = bg(ds, "cierre")
     d = ImageDraw.Draw(im)
     m = ds["marca"]
     r = ds["roles_texto"]["cierre"]
     f = pil_font(ds["fuentes"][r["fuente"]], r["tam"])
-    y = H * r["y"]
+    y = H * r.get("y", 0.3)
     for w in m.get("cierre_palabras", ["CIERRE"]):
-        d.text((W * r["x"], y), w, font=f, fill=color(ds, r["color"]))
+        d.text((W * r.get("x", 0.08), y), w, font=f, fill=color(ds, r.get("color", "claro")))
         y += r["tam"] * r.get("interlinea", 1.25)
     block(d, ds, "meta", m.get("cierre_linea", ""), W * 0.5, H * 0.62)
     block(d, ds, "pill", m.get("cta", "SÍGUENOS"), W * 0.5, H * 0.69)
@@ -118,7 +144,7 @@ def swatches(ds, w):
     im = Image.new("RGB", (w, 300), "#FFFFFF")
     d = ImageDraw.Draw(im)
     f = pil_font({"familia": "Menlo", "estilo": "Bold"}, 22)
-    keys = ["fondo", "rejilla", "claro", "acento1", "acento2", "acento3"]
+    keys = [k for k in ("fondo", "rejilla", "claro", "acento1", "acento2", "acento3") if k in pal]
     sw = w // len(keys)
     for i, k in enumerate(keys):
         h = pal[k]
@@ -156,8 +182,15 @@ def fc_frames(ds, tmp):
         subprocess.run([CLI, "--project", str(proj), "render", "--seconds", str(t), "--scale", "0.5", "--out", str(png),
                         "--allow-offline"], capture_output=True)
         if png.exists():
-            outs.append(Image.open(png).convert("RGB").resize((W, H)))
+            outs.append(Image.open(png).convert("RGB").resize(size(ds)))
+        else:
+            print(f"aviso: FilmCraft no devolvió el fotograma {t}s", file=sys.stderr)
     return outs
+
+
+def previews_dir(ds_id):
+    """Donde va la lámina sin --out: <datos>/previews/<id>/ (ds_studio ver también mira aquí)."""
+    return DATA / "previews" / ds_id
 
 
 def main():
@@ -168,15 +201,23 @@ def main():
     ap.add_argument("--fc", action="store_true")
     a = ap.parse_args()
     ds = load_ds(a.ds)
-    out = Path(a.out) if a.out else Path(ds["_dir"]) / "preview.png"
+    out = Path(a.out) if a.out else previews_dir(Path(ds["_dir"]).name) / "preview.png"
     mocks = [mock_title(ds), mock_content(ds, a.frame), mock_eco(ds), mock_outro(ds)]
     labels = ["PIL · título", "PIL · contenido", "PIL · eco", "PIL · cierre"]
+    if "promo" in ds:
+        print("aviso: DS de promo; estas maquetas solo enseñan paleta y tipografía. La vista previa real: "
+              "promo_preview.py DS VIDEO o fotogramas sueltos de la escena (segundos como último argumento: … 0.6,9.2)", file=sys.stderr)
     if a.fc:
-        with tempfile.TemporaryDirectory(prefix="fcs_prev_") as tmp:
-            fcs = fc_frames(ds, tmp)
+        try:                                               # sin FilmCraft la lámina PIL sale igual
+            with tempfile.TemporaryDirectory(prefix="fcs_prev_") as tmp:
+                fcs = fc_frames(ds, tmp)
+        except Exception as ex:  # noqa: BLE001
+            print(f"aviso: sin fotogramas de FilmCraft ({type(ex).__name__}: {str(ex)[:200]})", file=sys.stderr)
+            fcs = []
         mocks += fcs
         labels += ["FilmCraft · título", "FilmCraft · contenido"][:len(fcs)]
-    tw, th = 360, 640
+    cw, ch = size(ds)
+    tw, th = (360, round(360 * ch / cw)) if ch >= cw else (round(360 * cw / ch), 360)
     flyer = ds.get("match", {}).get("flyer")
     fl = Image.open(flyer).convert("RGB") if flyer and Path(flyer).exists() else None
     if fl:

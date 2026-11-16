@@ -5,3 +5,8 @@ __pycache__/
 FilmCraft Previews/
 *.fcproj
 *.wav.tmp
+# motor (Rust): el binario se compila con Nix (flake.nix), con motor/compilar.sh o en CI
+plugins/filmcraft-studio/motor/target/
+plugins/filmcraft-studio/bin/*/
+result
+result-*

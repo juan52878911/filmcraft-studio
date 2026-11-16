@@ -20,11 +20,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from fclib import CLI, TPS, headless  # noqa: E402
 
+from common import WHISPER_CLI, WHISPER_DESCARGA, ErrorExterno, cli, run  # noqa: E402
 from common import WHISPER_MODEL as DEFAULT_MODEL  # noqa: E402
 
 
 def words_from_whisper(json_path):
-    j = json.load(open(json_path))
+    with open(json_path) as f:
+        j = json.load(f)
     out, prev_end = [], None
     for seg in j["transcription"]:
         seg_start = seg["offsets"]["from"] / 1000
@@ -68,7 +70,8 @@ def media_items(project):
 
 def source_path(project, name):
     """Ruta real del medio, leída del .fcproj."""
-    j = json.load(open(project))
+    with open(project) as f:
+        j = json.load(f)
     for it in j["project"]["items"].values():
         if it.get("name") == name:
             media = it.get("kind", {}).get("Media", {}).get("media", {})
@@ -79,14 +82,20 @@ def source_path(project, name):
 def whisper_words(src, stem, model=DEFAULT_MODEL, lang="es", prompt="", dtw="medium"):
     """Transcribe un medio con whisper.cpp y devuelve [[palabra, inicio_s, fin_s], ...] (tiempos de la fuente)."""
     stem = Path(stem)
+    if not Path(model).exists():
+        raise ErrorExterno(f"no existe el modelo de whisper {model}; " + WHISPER_DESCARGA.format(dest=model))
     wav = stem.with_suffix(".wav")
-    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src), "-vn", "-ac", "1", "-ar", "16000",
-                    "-c:a", "pcm_s16le", str(wav)], check=True)
-    cmd = ["whisper-cli", "-m", model, "-l", lang, "-ojf", "-dtw", dtw, "-nfa", "-of", str(stem), "-t", "8", "-np", str(wav)]
+    run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src), "-vn", "-ac", "1", "-ar", "16000",
+         "-c:a", "pcm_s16le", str(wav)], que=f"ffmpeg (audio de {Path(src).name})", text=True)
+    cmd = [WHISPER_CLI, "-m", model, "-l", lang, "-ojf", "-dtw", dtw, "-nfa", "-of", str(stem), "-t", "8", "-np", str(wav)]
     if prompt:
         cmd += ["--prompt", prompt]
-    subprocess.run(cmd, check=True, capture_output=True)
-    wav.unlink(missing_ok=True)
+    try:
+        run(cmd, que="whisper-cli (instala whisper-cpp: brew install whisper-cpp)", text=True)
+    finally:
+        wav.unlink(missing_ok=True)
+    if not Path(f"{stem}.json").exists():
+        raise ErrorExterno(f"whisper-cli no escribió {stem}.json")
     return words_from_whisper(f"{stem}.json")
 
 
@@ -125,7 +134,9 @@ def main():
         r = subprocess.run([CLI, "--project", a.project, "--save", "run", str(jl), "--compact"], capture_output=True, text=True)
         ok = r.stdout.count('"ok":true')
         print(f"importadas {ok}/{len(lines)} transcripciones" + ("" if ok == len(lines) else f"\n{r.stdout[-400:]}{r.stderr[-400:]}"))
+        if r.returncode or ok != len(lines):
+            sys.exit(1)
 
 
 if __name__ == "__main__":
-    main()
+    cli(main)

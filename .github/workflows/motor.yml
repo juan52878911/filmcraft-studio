@@ -1,0 +1,79 @@
+# Compila el binario `cine` en un runner nativo de cada plataforma, pasa los tests y lo publica.
+# - En cada push que toque el motor o el esquema que incluye: artefactos descargables por plataforma.
+# - En una etiqueta motor-v*: además, una release con los cinco binarios.
+# Las rutas de salida coinciden con las que busca plugins/filmcraft-studio/bin/cine: bin/<so>-<arq>/cine[.exe].
+name: motor
+
+on:
+  push:
+    paths: ["plugins/filmcraft-studio/motor/**", "plugins/filmcraft-studio/schemas/ds.schema.json", ".github/workflows/motor.yml"]
+    tags: ["motor-v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  MOTOR: plugins/filmcraft-studio/motor
+  BIN: plugins/filmcraft-studio/bin
+
+jobs:
+  compilar:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: macos-14,         target: aarch64-apple-darwin,       plataforma: darwin-arm64,  exe: "" }
+          - { runner: macos-13,         target: x86_64-apple-darwin,        plataforma: darwin-x64,    exe: "" }
+          - { runner: ubuntu-24.04,     target: x86_64-unknown-linux-musl,  plataforma: linux-x64,     exe: "" }
+          - { runner: ubuntu-24.04-arm, target: aarch64-unknown-linux-musl, plataforma: linux-arm64,   exe: "" }
+          - { runner: windows-2022,     target: x86_64-pc-windows-msvc,     plataforma: windows-x64,   exe: ".exe" }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rust estable con el target
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup target add ${{ matrix.target }}
+      - name: musl (Linux estático)
+        if: contains(matrix.target, 'musl')
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - name: Tests
+        run: cargo test --release --manifest-path ${{ env.MOTOR }}/Cargo.toml --target ${{ matrix.target }}
+      - name: Compilar
+        run: cargo build --release --manifest-path ${{ env.MOTOR }}/Cargo.toml --target ${{ matrix.target }}
+      - name: Colocar en bin/
+        shell: bash
+        run: |
+          mkdir -p "$BIN/${{ matrix.plataforma }}"
+          cp "$MOTOR/target/${{ matrix.target }}/release/cine${{ matrix.exe }}" "$BIN/${{ matrix.plataforma }}/"
+          "$BIN/${{ matrix.plataforma }}/cine${{ matrix.exe }}" version
+          "$BIN/${{ matrix.plataforma }}/cine${{ matrix.exe }}" validar-ds promo-riso --json > /dev/null || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cine-${{ matrix.plataforma }}
+          path: ${{ env.BIN }}/${{ matrix.plataforma }}/cine${{ matrix.exe }}
+
+  nix:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@v16
+      - run: nix build -L .#marketplace && result/plugins/filmcraft-studio/bin/cine version
+
+  publicar:
+    if: startsWith(github.ref, 'refs/tags/motor-v')
+    needs: compilar
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: dist }
+      - name: Empaquetar por plataforma
+        run: |
+          cd dist
+          for p in */; do p=${p%/}; tar -czf "../$p.tar.gz" -C "$p" .; done
+          ls -la ..
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" --repo "${{ github.repository }}" --title "${{ github.ref_name }}" --notes "Binarios de cine por plataforma (plugins/filmcraft-studio/bin/<so>-<arq>/)." cine-*.tar.gz

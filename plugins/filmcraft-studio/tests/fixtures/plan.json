@@ -1,0 +1,51 @@
+{
+ "version": 1,
+ "titulo": "Prueba de ensamblado: escenas por código en FilmCraft",
+ "ds": "promo-brasa-escarcha",
+ "estrategia": "Dos escenas renderizadas por código (gancho brasa, demo blueprint) como fuentes, más el cierre como tarjeta del DS. Música generada aparte en la rejilla de 134 BPM.",
+ "bloques": [
+  {
+   "id": "gancho",
+   "tipo": "gancho",
+   "planos": [
+    {
+     "src": "gancho",
+     "in": 0.0,
+     "out": 3.58
+    }
+   ],
+   "subtitulos": false
+  },
+  {
+   "id": "demo",
+   "tipo": "contenido",
+   "transicion": "barrido",
+   "planos": [
+    {
+     "src": "demo",
+     "in": 0.0,
+     "out": 8.9
+    }
+   ],
+   "subtitulos": false,
+   "textos": [
+    {
+     "rol": "etiqueta",
+     "texto": "GRABACIÓN REAL",
+     "t": 0.6,
+     "dur": 1.6,
+     "pos": [
+      0.78,
+      0.12
+     ]
+    }
+   ]
+  },
+  {
+   "id": "cierre",
+   "tipo": "cierre",
+   "dur": 3
+  }
+ ],
+ "nota": "Escenas renderizadas por código como fuentes de FilmCraft. Antes: analyze_media.py --sin-vision sobre escenas/*.mp4 y musica.archivo apuntando a la mezcla del motor de código."
+}

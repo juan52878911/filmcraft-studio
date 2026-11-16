@@ -13,6 +13,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from fclib import FC, TPS, fr as _fr, ticks  # noqa: E402,F401
 
+# Los convert_*.py ejecutan al importarse (conectan con la app y hacen cambios): con --help solo se explica.
+if any(x in ("-h", "--help") for x in sys.argv[1:]):
+    print((getattr(sys.modules.get("__main__"), "__doc__", None) or __doc__).strip())
+    print("\nGuion de un solo uso (reel #RetoCertEAN): lee palmier/README.md antes de correrlo.")
+    sys.exit(0)
+
 P = os.environ.get("PALMIER_PROJECT", "")
 TL = os.environ.get("PALMIER_TIMELINE", "")
 G = os.environ.get("PALMIER_GRAFICA", "")

@@ -75,7 +75,8 @@ def kmeans(px, k=12, it=25, seed=7):
     c = [px[rng.integers(len(px))]]
     for _ in range(1, k):                                  # k-means++
         d = np.min(((px[:, None, :] - np.array(c)[None]) ** 2).sum(-1), axis=1)
-        c.append(px[rng.choice(len(px), p=d / d.sum())])
+        tot = d.sum()                                      # imagen plana: todos a distancia 0 -> uniforme
+        c.append(px[rng.choice(len(px), p=d / tot)] if tot > 0 else px[rng.integers(len(px))])
     c = np.array(c, dtype=np.float32)
     for _ in range(it):
         lab = np.argmin(((px[:, None, :] - c[None]) ** 2).sum(-1), axis=1)
@@ -146,14 +147,15 @@ def roles(cl):
 
 
 def fit_text_colors(ds):
-    """Sobre cada fondo de color, el texto (oscuro/claro) con más contraste."""
+    """Sobre cada fondo de color, el texto (oscuro/claro) con más contraste. Sin fondo propio, cuenta el del lienzo."""
     pal = ds["paleta"]
+
+    def hx(f):                                             # nombre de la paleta o hex literal
+        return f if isinstance(f, str) and f.startswith("#") else pal.get(f or "fondo", pal["fondo"])
     for r in ds["roles_texto"].values():
-        fondos = r.get("fondo")
-        if not fondos:
-            continue
+        fondos = r.get("fondo") or "fondo"
         fl = fondos if isinstance(fondos, list) else [fondos]
-        best = max(("oscuro", "claro"), key=lambda t: min(contrast(pal[t], pal[f]) for f in fl))
+        best = max(("oscuro", "claro"), key=lambda t: min(contrast(pal[t], hx(f)) for f in fl))
         if r.get("color") in ("oscuro", "claro"):
             r["color"] = best
 
@@ -178,6 +180,9 @@ def main():
         return
     if not a.id:
         sys.exit("falta --id")
+    import re
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}", a.id):
+        sys.exit(f"id de DS no válido: {a.id!r} (solo minúsculas, cifras y guiones)")
     base_dir = ds_dir(a.base)
     ds = copy.deepcopy(jload(base_dir / "ds.json"))
     out = Path(a.out) if a.out else USER_DS / a.id
@@ -185,7 +190,7 @@ def main():
     ds["id"] = a.id
     ds["nombre"] = a.nombre or f"{a.id} (piel derivada de {Path(a.flyer).name} sobre {ds['gramatica']})"
     ds["version"] = 1
-    ds["derivado_de"] = {"base": ds.get("id_base", a.base), "flyer": str(Path(a.flyer).resolve()), "recorte": box,
+    ds["derivado_de"] = {"base": ds.get("id_base", a.base), "flyer": Path(a.flyer).name, "recorte": box,
                          "clusters": cl, "acentos_derivados": [d["hex"] for d in derived]}
     ds["paleta"] = pal
     ds["marca"].update(json.loads(a.marca))
@@ -196,10 +201,17 @@ def main():
     im.thumbnail((1200, 1200))
     im.save(out / "assets/flyer.jpg", quality=90)
     jsave(out / "ds.json", ds)
-    from ds_assets import make
-    fondos, mattes = make(ds, out / "assets", ds["lienzo"]["ancho"], ds["lienzo"]["alto"])
-    ds["fondos"], ds["mattes"] = fondos, mattes
-    jsave(out / "ds.json", ds)
+    if (base_dir / "assets" / "sfx").is_dir() and not (out / "assets" / "sfx").exists():
+        shutil.copytree(base_dir / "assets" / "sfx", out / "assets" / "sfx")   # los SFX no dependen de la paleta
+    if "promo" in ds:                                      # DS de promo: fondos con la piel de su gramática
+        import subprocess
+        subprocess.run([sys.executable, str(Path(__file__).parent / "promo_fondos.py"), str(out)], check=True,
+                       capture_output=True)
+    else:
+        from ds_assets import make
+        fondos, mattes = make(ds, out / "assets", ds["lienzo"]["ancho"], ds["lienzo"]["alto"])
+        ds["fondos"], ds["mattes"] = fondos, mattes
+        jsave(out / "ds.json", ds)
     for f in ("NOTAS.md",):
         if (base_dir / f).exists():
             shutil.copy(base_dir / f, out / f)

@@ -1,0 +1,360 @@
+{
+ "version": 1,
+ "estado": "propuesta",
+ "iteracion": 3,
+ "pedido": "promo del plugin filmcraft-studio 0.3 para probar la preproducción",
+ "respuestas": {
+  "objetivo": {
+   "valor": "instalar el plugin",
+   "origen": "dado",
+   "ronda": "A"
+  },
+  "plataforma": {
+   "valor": "X/LinkedIn 16:9 ~30 s y Reels/Shorts 9:16 ~25 s",
+   "origen": "dado",
+   "ronda": "A"
+  },
+  "idea": {
+   "valor": "Te pregunta antes de hacerlo",
+   "origen": "dado",
+   "ronda": "A"
+  },
+  "publico": {
+   "valor": "devs que usan Claude Code y quieren hacer video",
+   "origen": "inferido",
+   "por": "README:6"
+  },
+  "referencias": {
+   "valor": "vidrio de Blender + gradient map + risografía, los tres en el mismo video con transiciones suaves animadas",
+   "origen": "dado",
+   "ronda": "A"
+  },
+  "concepto": {
+   "valor": "tres fases del plugin: vidrio lee, termo pregunta, riso entrega",
+   "origen": "dado",
+   "ronda": "B"
+  },
+  "material": {
+   "valor": "preguntas y respuestas reales de esta sesión como tipografía + fotogramas de los promos ya hechos",
+   "origen": "dado",
+   "ronda": "B"
+  },
+  "voz": {
+   "valor": "sin voz",
+   "origen": "dado",
+   "ronda": "B"
+  },
+  "musica": {
+   "valor": "134 BPM, tres géneros: ambiente con pulsos → UK garage → breakbeat lo-fi, sintetizado",
+   "origen": "dado",
+   "ronda": "B"
+  },
+  "transiciones": {
+   "valor": "cada una con su materia, 1 compás",
+   "origen": "dado",
+   "ronda": "D"
+  },
+  "final": {
+   "valor": "los tres en el CTA",
+   "origen": "dado",
+   "ronda": "D"
+  },
+  "duracion": {
+   "valor": "16:9 ~30 s, 9:16 ~25 s",
+   "origen": "dado",
+   "ronda": "E"
+  },
+  "modo": {
+   "valor": "fotogramas fijos primero, render largo después",
+   "origen": "dado",
+   "ronda": "E"
+  },
+  "idioma": {
+   "valor": "español",
+   "origen": "inferido",
+   "por": "todo el plugin y la sesión en español"
+  },
+  "cta": {
+   "valor": "/plugin marketplace add juan52878911/filmcraft-studio",
+   "origen": "inferido",
+   "por": "README.md:159"
+  }
+ },
+ "referencias": [
+  {
+   "archivo": "referencias/vidrio-blender.mp4",
+   "medida": {
+    "luz": 0.283,
+    "contraste": 0.332,
+    "paleta": [
+     "#020202",
+     "#D1D1D5",
+     "#433B36"
+    ]
+   },
+   "regla": "el vidrio refracta lo que tiene detrás; luces de estudio en tiras blanca, azul y naranja dan los bordes",
+   "significado": "mirar a través: ver algo deformado para entenderlo",
+   "donde_no": "el fondo negro con polvo no se deforma; solo los anillos",
+   "variacion": "los anillos giran y flotan; la refracción cambia con el ángulo",
+   "anatomia": "anillos con dispersión, titular enorme detrás, Cycles + Metal",
+   "tomar": [
+    "la refracción de contenido real",
+    "las tiras de luz azul y naranja",
+    "el polvo y los arañazos"
+   ],
+   "no_tomar": [
+    "la palabra TINTIN",
+    "el titular vertical en Impact"
+   ]
+  },
+  {
+   "archivo": "referencias/gradient-map.mp4",
+   "medida": {
+    "bpm": 134.5,
+    "cortes_por_min": 11.2,
+    "plano_medio_s": 4.44,
+    "luz": 0.698
+   },
+   "regla": "mapa de temperatura sobre la intensidad",
+   "significado": "atención y energía",
+   "donde_no": "menos del 30 % del texto caliente; lo frío queda nítido con filo rojo",
+   "variacion": "el calor baja desde la fuente; se enciende y se enfría por regiones",
+   "anatomia": "halo 22–30 px corrido (−10, +8)·calor; núcleo a granate",
+   "tomar": [
+    "el campo de calor por fuentes",
+    "el filo frío",
+    "la llamarada"
+   ],
+   "no_tomar": [
+    "las maquetas de kindling"
+   ]
+  },
+  {
+   "archivo": "referencias/riso.mp4",
+   "medida": {
+    "bpm": 134.9,
+    "cortes_por_min": 2.6,
+    "luz": 0.861,
+    "saturacion": 0.102
+   },
+   "regla": "dos tintas que se multiplican con el registro desplazado",
+   "significado": "imprimir: copias, entrega",
+   "donde_no": "el papel queda limpio; una sola tinta es congelado",
+   "variacion": "temblor por pasada, animación a dos (15 fps), semitono radial",
+   "anatomia": "rosa #FF48B0 y azul #0078BF, registro (7, −4) px",
+   "tomar": [
+    "las dos tintas",
+    "el semitono",
+    "las marcas de registro"
+   ],
+   "no_tomar": [
+    "el texto de kindling"
+   ]
+  }
+ ],
+ "anti_referencias": [
+  "showreel que encadena estilos sin motivo",
+  "fundidos de catálogo",
+  "UI de Claude Code imitada"
+ ],
+ "concepto": {
+  "idea": "Te pregunta antes de hacerlo.",
+  "metafora": "cada estilo es una fase del plugin: el vidrio lee tus referencias, el calor es tu respuesta, la tinta es la entrega",
+  "reglas": [
+   "solo se deforma lo que se está leyendo (el vidrio); el fondo queda quieto",
+   "lo elegido se calienta y lo descartado queda frío con su filo",
+   "lo entregado se imprime en dos tintas: una pasada por formato (16:9 y 9:16)",
+   "cada fase cambia de fondo, tipografía y materia: el cambio de estilo tiene que ser evidente"
+  ],
+  "hilo_de_color": "las tiras azul y naranja del vidrio son el azul #3466E0 y el naranja #FFAC40 del mapa; el azul del mapa se enfría al azul riso #0078BF y el rojo caliente baja al rosa #FF48B0"
+ },
+ "ds": {
+  "id": "promo-tres-fases",
+  "estado": "borrador",
+  "gramatica": "tres-fases@1",
+  "fotogramas": [
+   "build/fotos/hoja_16x9.png",
+   "build/fotos/hoja_9x16.png"
+  ]
+ },
+ "movimientos": [
+  {
+   "nombre": "lente_lee",
+   "significa": "el plugin lee una referencia: el anillo pasa sobre ella y la deforma",
+   "escenas": [
+    "leer"
+   ]
+  },
+  {
+   "nombre": "medida_tecleada",
+   "significa": "lo medido aparece como dato (BPM, cortes/min, paleta)",
+   "escenas": [
+    "leer"
+   ]
+  },
+  {
+   "nombre": "calor_florece",
+   "significa": "transición 1: la luz naranja del vidrio se vuelve fuente de calor",
+   "escenas": [
+    "t1"
+   ]
+  },
+  {
+   "nombre": "opcion_se_calienta",
+   "significa": "la respuesta elegida se enciende; las demás se enfrían a su filo",
+   "escenas": [
+    "preguntar"
+   ]
+  },
+  {
+   "nombre": "enfria_a_semitono",
+   "significa": "transición 2: el degradado se cuantiza en puntos y se queda en dos tintas",
+   "escenas": [
+    "t2"
+   ]
+  },
+  {
+   "nombre": "pasada_de_imprenta",
+   "significa": "cada formato entra como una pasada con su tinta y su golpe de registro",
+   "escenas": [
+    "entregar"
+   ]
+  },
+  {
+   "nombre": "tres_en_uno",
+   "significa": "cierre: riso + anillo que refracta + cursor caliente",
+   "escenas": [
+    "cierre"
+   ]
+  }
+ ],
+ "sonido": {
+  "musica": "sintetizada",
+  "bpm": 134,
+  "generos": [
+   "ambiente con pulsos (vidrio)",
+   "UK garage 2-step (termo)",
+   "breakbeat lo-fi (riso)"
+  ],
+  "transiciones": "un compás de mezcla con filtro: el pad del vidrio abre al garage; el garage pasa por bitcrush y vinilo al breakbeat",
+  "firma": "campana de cristal al leer, chispa e ignición al elegir, imprenta al entregar",
+  "master": "-14 LUFS, -1 dBTP"
+ },
+ "guion": "guion.json",
+ "motores": [
+  {
+   "escena": "leer",
+   "motor": "3d",
+   "herramienta": "Blender Cycles (motor_blender.py) a media resolución por formato: titular 3D y anillo de vidrio con dispersión delante de una placa emisiva; máscara Eevee a resolución completa"
+  },
+  {
+   "escena": "t1, preguntar, t2",
+   "motor": "codigo",
+   "herramienta": "Python PIL + numpy (campo de calor de termo@1)"
+  },
+  {
+   "escena": "entregar",
+   "motor": "codigo",
+   "herramienta": "Python PIL + numpy (riso@1)"
+  },
+  {
+   "escena": "cierre",
+   "motor": "3d + codigo",
+   "herramienta": "placa riso por código + anillo en Blender"
+  },
+  {
+   "escena": "musica",
+   "motor": "musica",
+   "herramienta": "numpy en la rejilla de 134 BPM"
+  }
+ ],
+ "entregables": [
+  {
+   "archivo": "filmcraft-studio-promo-16x9.mp4",
+   "lienzo": "1920x1080",
+   "fps": 30,
+   "duracion_s": "28–31"
+  },
+  {
+   "archivo": "filmcraft-studio-promo-9x16.mp4",
+   "lienzo": "1080x1920",
+   "fps": 30,
+   "duracion_s": "24–27",
+   "max_mb": 30
+  }
+ ],
+ "criterios": [
+  {
+   "id": "c1",
+   "que": "16:9 1920x1080 de 28–31 s y 9:16 1080x1920 de 24–27 s, 30 fps",
+   "como": "ffprobe"
+  },
+  {
+   "id": "c2",
+   "que": "«TE PREGUNTA» o una pregunta real visible antes del segundo 10 en los dos formatos",
+   "como": "hoja de fotogramas"
+  },
+  {
+   "id": "c3",
+   "que": "aparecen los tres estilos en orden vidrio → gradient map → riso, unidos por dos transiciones animadas de ~1 compás sin cortes secos",
+   "como": "hoja de la transición cada 0,2 s"
+  },
+  {
+   "id": "c4",
+   "que": "las preguntas y respuestas en pantalla son literales de esta sesión",
+   "como": "comparar con biblia.respuestas"
+  },
+  {
+   "id": "c5",
+   "que": "en la fase termo solo la opción elegida está caliente",
+   "como": "hoja + critico-estilo"
+  },
+  {
+   "id": "c6",
+   "que": "el cierre muestra el comando de instalación legible al menos 2 s, con el anillo y un cursor caliente",
+   "como": "hoja"
+  },
+  {
+   "id": "c7",
+   "que": "ningún texto se sale del cuadro ni queda tapado por el anillo en ninguno de los dos recortes",
+   "como": "hoja de los dos formatos"
+  },
+  {
+   "id": "c8",
+   "que": "-14 LUFS ±1, pico ≤ -1 dBTP; la música cambia de género en cada transición",
+   "como": "ebur128 + espectrograma"
+  },
+  {
+   "id": "c9",
+   "que": "9:16 < 30 MB",
+   "como": "ls"
+  },
+  {
+   "id": "c10",
+   "que": "cada fase tiene fondo, tipografía y materia distintos (negro+vidrio 3D / azul térmico / papel riso)",
+   "como": "hoja de fotogramas"
+  }
+ ],
+ "criticas": [
+  {
+   "iteracion": 2,
+   "veredicto": "correcto pero genérico",
+   "por": "critico-estilo (Fable)",
+   "cambios": [
+    "entregas con material de este promo (no kindling), una tinta por formato",
+    "una maqueta por respuesta: AMBAS a sangre, LOS TRES girado 90°",
+    "fuera las letras de ronda A/D",
+    "cierre con un anillo grande que cruza nombre y comando y lo deja legible",
+    "una referencia cada vez a toda altura, sin la palabra TINTIN"
+   ]
+  }
+ ],
+ "pendientes": [],
+ "cambios": [
+  {
+   "iteracion": 3,
+   "que": "cada fase es un mundo distinto: vidrio = estudio negro con titular 3D de vidrio en Impact; termo = cámara térmica azul con Arial Black; riso = papel crema con Helvetica Condensed; transiciones evidentes (llama y semitono)",
+   "pedido_por": "usuario"
+  }
+ ]
+}

@@ -30,6 +30,20 @@ def measure(ds, role, text, tam=None):
     return (w + 2 * m) / ds["lienzo"]["ancho"], (h + 2 * m) / ds["lienzo"]["alto"]
 
 
+def wrap(text, max_chars):
+    """Parte un texto en líneas de como mucho max_chars (sin partir palabras)."""
+    words, lines, cur = text.split(), [], ""
+    for w in words:
+        if cur and len(cur) + 1 + len(w) > max_chars:
+            lines.append(cur)
+            cur = w
+        else:
+            cur = (cur + " " + w).strip()
+    if cur:
+        lines.append(cur)
+    return lines
+
+
 class Styler:
     def __init__(self, engine, ds):
         self.e = engine
@@ -73,6 +87,8 @@ class Styler:
         a = anim or r.get("anim", "ninguna")
         if a == "popIn":
             self.pop_in(clip, L["effectIndex"], start)
+        elif a == "calorEntra":
+            self.calor_entra(clip, L["effectIndex"], start)
         return {"clip": clip, "layer": layer, "box": [round(b, 4) for b in box], "rol": role, "texto": text,
                 "start": start, "dur": dur, "pista": trk}
 
@@ -81,20 +97,19 @@ class Styler:
         self.e.kf(clip, eff, "scale", [(self.bf(f), v, "linear") for f, v in p["escala"]], start)
         self.e.kf(clip, eff, "opacity", [(self.bf(f), v, "linear") for f, v in p["opacidad"]], start)
 
-    def size_of(self, role, text, tam=None):
-        return measure(self.ds, role, text, tam)
+    def calor_entra(self, clip, eff, start):
+        """termo@1: el texto llega desenfocado y se enfoca (Gaussian Blur con keyframes) mientras aparece."""
+        p = self.ds["animaciones"]["calorEntra"]
+        self.e.x("effects.apply", {"clips": [clip], "effect": "gaussian_blur"})
+        fx = self.e.clip(clip).get("effects", [])
+        gi = max(i for i, f in enumerate(fx) if "gaussian" in str(f.get("id") or f.get("effect") or f.get("name")).lower())
+        self.e.kf(clip, gi, "blurriness", [(self.bf(f), v, "linear") for f, v in p["desenfoque"]], start)
+        self.e.kf(clip, eff, "opacity", [(self.bf(f), v, "linear") for f, v in p["opacidad"]], start)
+        self.e.kf(clip, eff, "scale", [(self.bf(f), v, "linear") for f, v in p["escala"]], start)
 
     def wrap(self, text, max_chars):
-        words, lines, cur = text.split(), [], ""
-        for w in words:
-            if cur and len(cur) + 1 + len(w) > max_chars:
-                lines.append(cur)
-                cur = w
-            else:
-                cur = (cur + " " + w).strip()
-        if cur:
-            lines.append(cur)
-        return lines
+        """Compatibilidad: Styler.wrap(None, …) sigue funcionando; usa la función de módulo wrap()."""
+        return wrap(text, max_chars)
 
     def title(self, text, start, dur, role="titulo", lines=None, pista=None):
         """Aparición por palabras: una capa por palabra en un solo gráfico, alineado a la izquierda."""
