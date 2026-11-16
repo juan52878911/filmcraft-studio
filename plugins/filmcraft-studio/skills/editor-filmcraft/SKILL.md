@@ -24,7 +24,7 @@ FC=${FILMCRAFT_CLI:-filmcraft-cli}     # en el PATH o en $FILMCRAFT_CLI
 3. **Mira en los puntos de decisión.** Renderiza hojas de fotogramas con `$S/render_sheet.py` en los cortes candidatos, no en todo el video.
 4. **Propón la estrategia en 4–8 frases** (estructura, tomas, ritmo, transiciones, color, audio, duración) y espera confirmación antes de cambiar el montaje. Los ajustes pequeños que el usuario pidió de forma explícita no necesitan confirmación.
 5. **Ejecuta** por el canal de control o en headless, en lotes, con el proyecto guardado antes y después.
-6. **Autoevalúate antes de enseñar nada** (ver `${CLAUDE_SKILL_DIR}/references/verificacion.md`): hojas de fotogramas en cada corte, loudness medida y comparación con la versión anterior. Haz como máximo 3 pasadas; si quedan problemas, dilos.
+6. **Autoevalúate antes de enseñar nada** (ver `${CLAUDE_SKILL_DIR}/references/verificacion.md`): hojas de fotogramas en cada corte, loudness medida (`${CLAUDE_PLUGIN_ROOT}/bin/cine medir-video` o `verify.py`) y comparación con la versión anterior; para algo que se publica, `cine puntuar` → subagente `critico-juicio` → `cine nota` (`--mejor` en la pasada siguiente). Haz como máximo 3 pasadas; si quedan problemas, dilos.
 7. **Reporta** qué cambió, qué verificaste y qué no pudiste verificar. No puedes oír: da las cifras de audio y no opines sobre cómo suena.
 
 ## Reglas duras (corrección, no gusto)

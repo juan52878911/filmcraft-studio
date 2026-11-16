@@ -331,7 +331,7 @@ pub fn cargar_medidas(a: &Args) -> Result<Vec<(String, Value)>, String> {
     let mut entregas = vec![];
     for p in a.opt("medidas").into_iter().flat_map(|s| s.split(',')).map(str::trim).filter(|s| !s.is_empty()) {
         let v = crate::catalogo::leer_json(std::path::Path::new(p))?;
-        let nombre = v["video"].as_str().map(|s| std::path::Path::new(s).file_name().unwrap_or_default().to_string_lossy().to_string()).unwrap_or_else(|| p.to_string());
+        let nombre = v["video"].as_str().map(|s| std::path::Path::new(s).file_name().unwrap_or_default().to_string_lossy().to_string()).unwrap_or_else(|| std::path::Path::new(p).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| p.to_string()));
         entregas.push((nombre, v));
     }
     Ok(entregas)

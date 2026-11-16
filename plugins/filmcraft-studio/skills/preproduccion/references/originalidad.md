@@ -2,9 +2,10 @@
 
 Se hace dos veces:
 1. sobre los fotogramas fijos, antes de aprobar la biblia;
-2. sobre el video, antes de entregarlo, junto al agente `critico`.
+2. sobre el video, antes de entregarlo, en la misma pasada de la verificación.
 
-La hace el agente `critico-estilo` (con el modelo más capaz disponible) con ojos frescos. Recibe:
+La hace el agente `critico-juicio` (con el modelo más capaz disponible) con ojos frescos; es el único crítico con IA y juzga también historia y copy. Recibe:
+- `ejes.json` de `cine puntuar … --comparaciones <carpeta>`: lo ya medido y los techos (`para_ia.techos.originalidad`);
 - los fotogramas;
 - `biblia.json`;
 - la hoja de referencias;
@@ -17,7 +18,7 @@ No le pases tu opinión: si le das la hipótesis, la confirma. Si el modelo del 
 ## Medir antes de opinar
 
 ```bash
-python3 $S/referencias.py --comparar REFERENCIA FOTOGRAMA [--out "$W/preproduccion/comparaciones/<ref>__<fotograma>.json"]
+python3 $S/referencias.py --comparar REFERENCIA FOTOGRAMA --json --out "$W/preproduccion/comparaciones/<ref>__<fotograma>.json"
 ```
 
 Compara las fichas métrica a métrica contra su tolerancia, en dos grupos, y da un veredicto:
@@ -40,7 +41,7 @@ Medido en la ronda 3 (pares sintéticos y 12 imágenes reales): 1 falso clon en 
 - Frente a una **anti-referencia**, el veredicto bueno es `estilo distinto`.
 - `ajustar` lista las métricas de estilo más alejadas, con el sentido (subir, bajar) y la palanca. Úsalo para el arreglo, no para perseguir cada cifra.
 - Compara también los fotogramas propios **entre sí**: si gancho y firma salen `clon probable`, hay una plantilla repetida (punto 3).
-- Las medidas no ven el significado: que el estilo coincida no dice que la regla esté entendida. El veredicto final es del crítico; estas cifras son su evidencia. Pásale la salida junto a los fotogramas.
+- Las medidas no ven el significado: que el estilo coincida no dice que la regla esté entendida. El veredicto final es del crítico; estas cifras son su evidencia. `cine puntuar --comparaciones` las lee: «clon probable» o «misma maqueta» es bloqueante y deja la originalidad en 2 como mucho; «estilo distinto» frente a una referencia que se quería reproducir, en 3.
 - **El crítico cita la capa 2.** En el punto 1 copia la `regla_generadora` y el `donde_no` de `filosofia_ref` y dice, con fotograma, si el video los cumple; si algo de `no_copiar` aparece en un fotograma, es un arreglo de los cinco primeros. Una crítica que no cita la regla de la referencia no vale.
 
 ## Lista (cada punto con evidencia: fotograma, segundo o archivo)
@@ -65,10 +66,9 @@ Medido en la ronda 3 (pares sintéticos y 12 imágenes reales): 1 falso clon en 
 
 ## Salida del agente
 
-- Veredicto: `distinto`, `correcto pero genérico` o `clon`.
-- Los 5 arreglos que hay que hacer primero, ordenados por impacto. Cada uno con:
-  - el punto de la lista que incumple;
-  - la evidencia;
-  - el cambio concreto.
+`juicio.json` (formato en `agents/critico-juicio.md`):
+- `veredicto_estilo`: `distinto`, `correcto pero genérico` o `clon`;
+- `puntuaciones.originalidad` (con el techo de las medidas), `regla_referencia` citada de la ficha;
+- hasta 5 arreglos ordenados por impacto, cada uno con el punto de la lista que incumple, la evidencia y el cambio concreto.
 
-Aplica los arreglos, rehaz solo lo afectado y enseña al usuario el antes y el después. Anota en la biblia (`criticas`) qué se cambió y por qué.
+`cine nota --ejes ejes.json --juicio juicio.json` los junta con los arreglos medidos y da los 5 definitivos. Aplica los arreglos, rehaz solo lo afectado y enseña al usuario el antes y el después. Anota en la biblia (`criticas`) qué se cambió y por qué.

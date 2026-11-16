@@ -28,6 +28,7 @@ export CLAUDE_PLUGIN_DATA=${CLAUDE_PLUGIN_DATA}
 W="<carpeta del evento>/06 - FilmCraft/auto/<slug>"
 A="<carpeta del evento>/06 - FilmCraft/analisis"     # caché única por evento, compartida con asistido
 FC=${FILMCRAFT_CLI:-filmcraft-cli}
+C=${CLAUDE_PLUGIN_ROOT}/bin/cine                     # motor determinista: medir, puntuar, nota
 ```
 
 0. **Preflight.** `python3 $S/herramientas.py --doctor --para camara [--ds <id>]` (sale 1 si falta algo obligatorio: `$FC`, `whisper-cli` y su modelo —obligatorios solo con `--para camara`—, `ffmpeg`, fuentes del DS); `$FC --version`. Si falta algo, dilo y para.
@@ -38,17 +39,23 @@ FC=${FILMCRAFT_CLI:-filmcraft-cli}
    ```
    Luego lanza el subagente **analista-material** (si no hay subagentes, hazlo tú en un paso aparte) con `$A/transcripcion.md` y `material.json`: devuelve los momentos con peso, cita y tiempos.
 3. **D1 · Brief:** `python3 $S/brief_infer.py --analisis "$A" --out "$W/brief.json" [--dado '{…lo que dio el usuario o la biblia…}']`. Si hay biblia (`W/preproduccion/biblia.json`), sus respuestas van en `--dado` y mandan.
-4. **D2 · DS:** el que eligió el brief (ranking con `brief_infer.py --solo-ds --para camara`: los `promo-*` no valen para material grabado). Sin `--ruta` la puntuación es solo el parecido de color (≥ 0,9 es el mismo estilo). Si ninguno encaja y hay flyer, créalo con `ds_from_image.py` (skill `design-system-video`). Valida con `ds_validate.py`.
+4. **D2 · DS:** el que eligió el brief (ranking con `$C elegir-ds --para camara --flyer <flyer> --ruta <carpeta>`: los `promo-*` no valen para material grabado). Sin `--ruta` la puntuación es solo el parecido de color (≥ 0,9 es el mismo estilo). Si ninguno encaja y hay flyer, créalo con `ds_from_image.py` (skill `design-system-video`). Valida con `$C validar-ds <id>`.
 5. **D3 · Plan:** lanza el subagente **director-montaje** (o hazlo tú si no hay subagentes) con brief, DS, análisis y momentos. Escribe `$W/plan.json` según `${CLAUDE_SKILL_DIR}/references/plan.md`: columna de audio primero, obligatorios cubiertos, barridos de cámara antes que mattes.
 6. **Compilar:** `python3 $S/plan_compile.py "$W/plan.json" --analisis "$A" --brief "$W/brief.json"`. Lee `avisos` y `cobertura`; si falta un obligatorio o un pop-up tapa caras, corrige el plan y recompila.
 7. **Aplicar** (fases A–E en un proyecto nuevo):
    `python3 $S/apply_plan.py "$W/compiled.json" --headless --out "$W/<Nombre>.fcproj"`
-8. **Verificar** (máximo 3 pasadas de arreglo):
-   `python3 $S/verify.py "$W/<Nombre>.fcproj" --compiled "$W/compiled.json" --analisis "$A" --out "$W/verificacion" [--ref <manual.fcproj>]`
-   Si sale con **2**, la verificación está incompleta (`verificado: false` en `verificacion.json`): lee `fallos`, arregla la causa (estado.json, detector de caras, loudness…) y repítela; no digas «verificado» ni cuentes esa vuelta como pasada de arreglo.
-   Mira las hojas (`hoja_cortes`, `hoja_popups`, `hoja_popups_sin_textos` con cajas verde/naranja/roja). Si hay que arreglar: cambia el plan, recompila y aplica a un nombre nuevo (`…-v2.fcproj`).
-9. **Crítica:** lanza el subagente **critico** con el informe provisional y las hojas; guarda su respuesta en `$W/critica.md`.
-10. **Informe:** `python3 $S/report.py "$W"` → `$W/informe.md`. Resume al usuario: qué se hizo, cifras, qué no se verificó y las preguntas de baja confianza.
+8. **Verificar** (máximo 3 pasadas de arreglo). La vuelta en curso vive en `$W/verificacion`; antes de rehacerla, cópiala a `$W/verificacion-vN` (hojas, `ejes.json`, `juicio.json`, `nota.json`).
+   1. **Medir:** `python3 $S/verify.py "$W/<Nombre>.fcproj" --compiled "$W/compiled.json" --analisis "$A" --out "$W/verificacion" [--ref <manual.fcproj>]`.
+      Si sale con **2**, la verificación está incompleta (`verificado: false` en `verificacion.json`): lee `fallos`, arregla la causa (estado.json, detector de caras, loudness…) y repítela; no digas «verificado» ni cuentes esa vuelta como pasada de arreglo.
+   2. **Puntuar:** `$C puntuar --ds <id> --compiled "$W/compiled.json" --verificacion "$W/verificacion/verificacion.json" [--biblia "$W/preproduccion/biblia.json"] --out "$W/verificacion/ejes.json"`. Audio, obligatorios, textos frente a caras, keyframes, cortes en palabra, ritmo y lectura salen de aquí, con sus bloqueantes y arreglos medidos.
+   3. **Juzgar:** lanza el subagente **critico-juicio** con `$W/verificacion/ejes.json` y la carpeta `$W` (hojas `hoja_cortes`, `hoja_popups`, `hoja_popups_sin_textos`, plan, compilado; biblia si hay). Solo juzga historia, copy, originalidad y los criterios `juicio`. Guarda su JSON en `$W/verificacion/juicio.json`. Si no hay subagentes, hazlo tú en un paso aparte releyendo solo lo que dice `agents/critico-juicio.md`.
+   4. **Nota:** `$C nota --ejes "$W/verificacion/ejes.json" --juicio "$W/verificacion/juicio.json" > "$W/verificacion/nota.json"` → nota, veredicto y los 5 arreglos (los medidos primero). Sale con 1 si es «no publicable».
+   5. **Arreglar:** si no es «publicable» y quedan pasadas, aplica los 5 arreglos al plan, recompila y aplica a un nombre nuevo (`…-v2.fcproj`). En la vuelta siguiente, `cine nota` lleva además `--mejor <nota de la mejor> --bloq-anterior si|no`:
+      - `Regresión` (o un bloqueante nuevo): vuelve a la mejor versión (su `.fcproj` y su `verificacion-vN`, que se copia de nuevo a `$W/verificacion`) y prueba otro arreglo;
+      - `pendiente de A/B` (`ab_necesario: true`): `$C ab --nueva "$W/verificacion" --anterior "$W/verificacion-vM" --out "$W/verificacion/ab"`, **critico-juicio** en modo A/B sobre `$W/verificacion/ab` → `ab.json`, y repite `cine nota` con `--ab "$W/verificacion/ab.json" --clave "$W/verificacion/clave-ab.txt"`;
+      - `Empate`: para.
+9. **Crítica para el informe:** con biblia, `$C criterios --biblia "$W/preproduccion/biblia.json" --verificacion "$W/verificacion/verificacion.json" --compiled "$W/compiled.json" --md` da la tabla de criterios (las filas `juicio` se completan con `criterios` de `juicio.json`). Escribe `$W/critica.md` con esa tabla, el veredicto, la nota, los 5 arreglos y `no_tocar` de `nota.json`, sin reinterpretarlos.
+10. **Informe:** `python3 $S/report.py "$W"` → `$W/informe.md` (incluye `critica.md`). Resume al usuario: qué se hizo, cifras, qué no se verificó (`sin_medir` de `nota.json`) y las preguntas de baja confianza.
 
 ## Tiempos de referencia (Mac M4)
 

@@ -31,7 +31,7 @@ Qué infiere:
 | `duracion_s` | Centro del rango `estructura.duracion_s` del DS (defecto, confianza 0,5) |
 | `tono` | Energía media del audio y `ritmo.energia` del DS |
 | `obligatorios` | Cifras con unidad ("100 dólares"), servicios del `vocabulario` del DS y momentos de premio en la transcripción. `candidatos` guarda además nombres propios con su fuente y segundo |
-| `ds` | Ranking por rutas y paleta del flyer (`--solo-ds --para camara` lo muestra; sin `--ruta` es solo el parecido de color: ≥ 0,9 es el mismo estilo) |
+| `ds` | Ranking por rutas y paleta del flyer (`${CLAUDE_PLUGIN_ROOT}/bin/cine elegir-ds --para camara --flyer F --ruta R` lo muestra; color por ΔE en OKLab; sin `--ruta` es solo el parecido de color: ≥ 0,9 es el mismo estilo) |
 | `cta` | `marca.cta` del DS |
 | `idioma` | Idioma de la transcripción |
 

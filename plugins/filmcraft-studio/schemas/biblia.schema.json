@@ -19,7 +19,12 @@
   "motores": {"type": "array", "items": {"type": "object", "required": ["escena", "motor"]}},
   "entregables": {"type": "array", "items": {"type": "object", "required": ["archivo"]}},
   "criterios": {"type": "array", "items": {"type": "object", "required": ["id", "que", "como"],
-                "properties": {"id": {"type": "string"}, "que": {"type": "string"}, "como": {"type": "string"}}}},
+                "properties": {"id": {"type": "string"}, "que": {"type": "string"}, "como": {"type": "string"},
+                               "medida": {"type": "array", "description": "lo que comprueba cine criterios contra medidas.json (cine medir-video) o verificacion.json; n: delante cuenta elementos",
+                                          "items": {"type": "object", "required": ["ruta"],
+                                                    "properties": {"ruta": {"type": "string"}, "min": {"type": "number"}, "max": {"type": "number"},
+                                                                   "igual": {"type": "number"}, "archivo": {"type": "string"}}}},
+                               "juicio": {"type": "boolean", "description": "true: sin cifra, lo juzga critico-juicio"}}}},
   "criticas": {"type": "array"}, "pendientes": {"type": "array"}, "cambios": {"type": "array"},
   "herramientas": {"type": ["array", "object"], "description": "salida de herramientas.py --json o --doctor --json"}
  }

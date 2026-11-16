@@ -29,7 +29,7 @@ Licencias: revísalas al usar cada herramienta. Las de los modelos de IA cambian
 | Pantalla, app, cámara, escenas compuestas | **OBS Studio** | `pantalla`, `camara` | — (manual) | GPL. `screencapture -v` para algo rápido en macOS |
 | Montaje alternativo | **Kdenlive / MLT** | montaje | `melt proyecto.mlt -consumer avformat:out.mp4` | GPL. Si el usuario lo prefiere a FilmCraft |
 | Composición por nodos | **Natron** | montaje | `NatronRenderer` | GPL; desarrollo lento. El compositor de Blender suele bastar |
-| Codificar, escalar, recortar, filtros, loudness | **ffmpeg** | todos | `ffmpeg …` | `ebur128` para medir, `loudnorm` + `alimiter` para el máster |
+| Codificar, escalar, recortar, filtros, loudness | **ffmpeg** | todos | `ffmpeg …` | `loudnorm` + `alimiter` para el máster; para medir, `bin/cine medir-video` (usa `ebur128` por dentro) |
 | Transcripción con tiempos por palabra | **whisper.cpp** | voz | `whisper-cli` (lo usa `analyze_media.py`) | MIT |
 | Voz TTS local | **Kokoro** / **Piper** | voz | API de Python (Kokoro), CLI `piper` | Kokoro tiene pesos Apache-2.0. Piper: revisa la licencia de cada voz |
 | Música y SFX sintetizados | **numpy** (`promo_sfx.py`, scripts de audio), **SuperCollider** | música | scripts | Sin licencias. Cuadra con la rejilla al fotograma |

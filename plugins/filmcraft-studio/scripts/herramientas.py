@@ -195,9 +195,18 @@ def doctor(ds_id=None, para=None):
                     "arreglo": "" if ok else arreglo})
     add("python ≥ 3.9", "obligatorio", sys.version_info >= (3, 9), sys.version.split()[0], "instala Python 3.9 o más nuevo")
     for mod, pkg, nivel in (("PIL", "pillow", "obligatorio"), ("numpy", "numpy", "obligatorio"),
-                            ("cv2", "opencv-python", "recomendado"), ("jsonschema", "jsonschema", "opcional")):
+                            ("cv2", "opencv-python", "recomendado")):
         add(f"python: {pkg}", nivel, importlib.util.find_spec(mod) is not None, "",
             f"pip install {pkg}  (o pip install -r requirements.txt)")
+    sys.path.insert(0, str(Path(__file__).parent))
+    from common import cine_bin
+    try:
+        r = subprocess.run([str(cine_bin()), "version"], capture_output=True, text=True)
+        cine_ok, cine_det = r.returncode == 0, (r.stdout.strip() or r.stderr.strip().splitlines()[0] if (r.stdout or r.stderr) else "")
+    except OSError as ex:
+        cine_ok, cine_det = False, str(ex)
+    add("cine (motor determinista)", "obligatorio", cine_ok, cine_det,
+        "compílalo: sh motor/compilar.sh (necesita Rust/cargo) o nix build en la raíz del repo")
     cli, como = filmcraft_cli()
     add("FilmCraft CLI", "recomendado" if para in PARA_SIN_FC else "obligatorio", cli, cli or como,
         "instala FilmCraft (github.com/storytold/filmcraft) y deja filmcraft-cli en el PATH o en $FILMCRAFT_CLI")

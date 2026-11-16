@@ -36,7 +36,7 @@ La regla de `W` está en `${CLAUDE_PLUGIN_ROOT}/skills/preproduccion/SKILL.md` (
 - Si hay un proyecto abierto con cambios, `file.save` y copia su `.fcproj` a `…/_respaldos/<nombre>-<fecha>.fcproj`.
 - Análisis (`analyze_media.py --out "$A" …`, con caché) como en headless, con su aviso de tiempo si el material es largo. Mientras corre, sigue con G1.
 
-**G1 · Estilo (design system).** Catálogo con miniaturas (`ds_studio.py catalogo --hoja …`; para recomendar, `brief_infer.py --solo-ds --para camara --flyer …`) y elección entre los DS más «Crear uno nuevo»; el ciclo crear → vista previa → modificar → aprobar es el de la skill `design-system-video`. Espera OK.
+**G1 · Estilo (design system).** Catálogo con miniaturas (`ds_studio.py catalogo --hoja …`; para recomendar, `${CLAUDE_PLUGIN_ROOT}/bin/cine elegir-ds --para camara --flyer … [--ruta …]`) y elección entre los DS más «Crear uno nuevo»; el ciclo crear → vista previa → modificar → aprobar es el de la skill `design-system-video`. Espera OK.
 
 **G2 · Brief.** `brief_infer.py --analisis "$A" --out "$W/brief.json" --dado '{"ds": "<aprobado>", …}'` y enseña una tabla corta (campo, valor, origen, confianza). Propón los valores inferidos y pregunta en una tanda lo que cambie o tenga confianza < 0,6. Guarda las respuestas con `--dado`. Espera OK.
 
@@ -54,7 +54,7 @@ La regla de `W` está en `${CLAUDE_PLUGIN_ROOT}/skills/preproduccion/SKILL.md` (
 
 **G5 · Pasadas globales.** `--bloques '*' --fases B,E` (música con ducking y grade). Subtítulos y loudness: enseña la mezcla `.wav` medida (`verify.py` da LUFS y pico). Espera OK.
 
-**G6 · Verificación y crítico.** `verify.py … --analisis "$A"` + subagente **critico** + `report.py "$W"`. Presenta veredicto y los 5 arreglos; aplica los que el usuario elija.
+**G6 · Verificación y crítico.** El bucle del paso 8 de `montaje-headless`, con `C=${CLAUDE_PLUGIN_ROOT}/bin/cine`: `verify.py … --analisis "$A" --out "$W/verificacion"` → `$C puntuar --ds <id> --compiled "$W/compiled.json" --verificacion "$W/verificacion/verificacion.json" [--biblia …] --out "$W/verificacion/ejes.json"` → subagente **critico-juicio** con `ejes.json` y `$W` → `juicio.json` → `$C nota --ejes … --juicio … > "$W/verificacion/nota.json"` → `critica.md` y `report.py "$W"`. Presenta la nota, el veredicto y los 5 arreglos; aplica los que el usuario elija. En la vuelta siguiente, `--mejor <nota> --bloq-anterior si|no`: si sale Regresión, dilo y propón volver a la mejor (`apply_plan.py --live --deshacer`); el A/B a ciegas solo si `ab_necesario`. Aquí no hay tope: manda el usuario.
 
 **G7 · Export.** Solo si lo pide (en texto o con `/filmcraft-studio:entregar`): sigue `${CLAUDE_PLUGIN_ROOT}/commands/entregar.md`. Las notas sueltas tras G6, con `${CLAUDE_PLUGIN_ROOT}/commands/nota.md`.
 

@@ -34,7 +34,7 @@
   - un cierre que evoluciona;
   - en la terminal, zoom, pausa y lo demás fuera de foco.
 
-  Hoy son la lista de `skills/preproduccion/references/originalidad.md` del plugin y el agente `critico-estilo`.
+  Hoy son la lista de `skills/preproduccion/references/originalidad.md` del plugin y el agente `critico-juicio`, con `cine puntuar --comparaciones` fijando el techo de la originalidad.
 - **Un tono ajeno en el mapa lo vuelve arcoíris.** El azul y el menta en el mapa caliente de Chispa lo convirtieron en un arcoíris genérico; un solo tono de brasa lo arregló.
 - **Lo que no se ve en la hoja no existe.** Las chispas y las barras pintadas como manchas no se veían; se arreglaron pintándolas en capas de brillo.
 - **Las salidas de la terminal no llegan cuando dicen las constantes.** Aparecen después del tecleo. Hay que medir el fotograma de cada fila y remapear con esa medida.

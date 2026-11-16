@@ -56,7 +56,7 @@ En modo asistido se pregunta lo que tenga poca confianza. En headless se usa el 
 **Subagentes**
 - `analista-material`: momentos con peso y cita.
 - `director-montaje`: elige el DS, completa el brief y escribe `plan.json`.
-- `critico`: veredicto y los 5 arreglos a hacer primero.
+- `critico-juicio`: el único crítico con IA. Juzga historia, copy, originalidad y los criterios de juicio, con los ejes medidos por `cine puntuar` como evidencia y techo; `cine nota` da el veredicto y los 5 arreglos.
 
 **Scripts**
 - `fcengine.py`
@@ -65,7 +65,7 @@ En modo asistido se pregunta lo que tenga poca confianza. En headless se usa el 
 - `ds_from_image.py`
 - `ds_assets.py`
 - `ds_preview.py`
-- `ds_validate.py`
+- `bin/cine` (Rust, `motor/`): `validar-ds`, `elegir-ds`, `medir-video`, `criterios`, `puntuar`, `nota`, `ab`.
 - `plan_compile.py`
 - `apply_plan.py`
 - `music_bed.py`
@@ -85,7 +85,7 @@ Se reutilizan `fclib`, `transcribe_fc`, `camera_motion`, `render_sheet`, los `co
 6. **Zonas libres** por pop-up.
 7. **Proyecto nuevo** en `06 - FilmCraft/auto/…`. Nunca se toca el `.fcproj` existente.
 8. **Aplicar por fases** A–E: cortes y continuidad; audio y SFX; textos; transiciones; grade.
-9. **Verificar** (como máximo 3 pasadas): hojas con y sin textos, texto frente a caras, keyframes, cortes en palabra, `.wav` con LUFS y pico real, duración. Termina con el `critico`.
+9. **Verificar** (como máximo 3 pasadas): hojas con y sin textos, texto frente a caras, keyframes, cortes en palabra, `.wav` con LUFS y pico real, duración. Después `cine puntuar` → `critico-juicio` → `cine nota` (veredicto y 5 arreglos; Regresión vuelve a la mejor versión).
 10. **`informe.md`** con las decisiones D1–D3, las evidencias y las preguntas pendientes. Sin export salvo con `entregar`.
 
 ## Flujo de entrada conversacional (v0.1, pedido por Juan; manda sobre el orden anterior)
@@ -141,7 +141,8 @@ filmcraft-studio/                      ← marketplace local
     ├── requirements.txt
     ├── skills/{director-video,preproduccion,promo-codigo,editor-filmcraft,design-system-video,brief-video,montaje-headless,montaje-asistido}/
     ├── commands/*.md                  atajos del usuario (disable-model-invocation); doctor es el diagnóstico
-    ├── agents/{analista-material,director-montaje,critico,critico-estilo}.md
+    ├── agents/{analista-material,director-montaje,critico-juicio}.md
+    ├── bin/cine, motor/              motor determinista en Rust (binarios en bin/<so>-<arq>/, fuera de git)
     ├── scripts/*.py, scripts/blender/, scripts/palmier/
     ├── schemas/{ds,brief,biblia,guion,plan}.schema.json
     ├── tests/                         pytest (motor falso, sin FilmCraft): python3 -m pytest tests -q

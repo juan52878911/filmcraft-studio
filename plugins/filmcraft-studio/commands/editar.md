@@ -23,7 +23,7 @@ Una pregunta abierta y corta: qué video imagina (para quién, qué tiene que co
 - **Automático**: `W=…/auto/<slug>/`.
 
 ## 2. Estilo (design system)
-Sigue el ciclo de la skill `design-system-video` (catálogo con hoja → elegir uno o «Crear uno nuevo» → vista previa → modificar → aprobar). Recomienda el que mejor encaje según `brief_infer.py --solo-ds --para camara --flyer … --ruta …` (sin `--ruta` la puntuación es solo el parecido de color: ≥ 0,9 es el mismo estilo). No avances hasta que el usuario elija uno del catálogo o apruebe el nuevo.
+Sigue el ciclo de la skill `design-system-video` (catálogo con hoja → elegir uno o «Crear uno nuevo» → vista previa → modificar → aprobar). Recomienda el que mejor encaje según `${CLAUDE_PLUGIN_ROOT}/bin/cine elegir-ds --para camara --flyer … --ruta …` (sin `--ruta` la puntuación es solo el parecido de color: ≥ 0,9 es el mismo estilo). No avances hasta que el usuario elija uno del catálogo o apruebe el nuevo.
 
 ## 3. Intenciones (brief)
 Cuando el análisis termine: `python3 $S/brief_infer.py --analisis "$A" --out "$W/brief.json" --dado '{"ds": "<id aprobado>", …lo que dijo en el paso 1…}'`. Propón los valores inferidos en una tabla corta (objetivo, público, plataforma, duración, tono, obligatorios, CTA) y pide confirmación o cambios en una sola pregunta. Guarda lo confirmado con `--dado`.

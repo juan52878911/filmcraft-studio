@@ -72,14 +72,14 @@ Cada respuesta que se pueda comprobar se convierte en un criterio verificable de
 - `de_cada_ref` → «el halo solo nace donde hay fuente de calor; ningún plano lo tiene en todo el texto».
 - `musica` sintetizada → «máster −14 LUFS ±1, pico ≤ −1 dBTP».
 
-Si no se puede comprobar, no es un criterio: es una intención, y va a `concepto`.
+Si no se puede comprobar, no es un criterio: es una intención, y va a `concepto`. Lo que tiene cifra lo comprueba `cine criterios` (sin `medida` infiere lienzo, duración, fps, LUFS, dBTP y MB del texto; si no, pon `medida`); lo que solo se ve en un fotograma lleva `juicio: true` y lo juzga `critico-juicio` (formato en `biblia.md`).
 
 ## Criterios por defecto
 
 Los usa el modo exprés y cualquier biblia que no tenga uno propio para ese punto:
-- lienzo y duración del entregable (`ffprobe`);
-- la idea visible en los primeros 2 s y en el cierre (hoja de fotogramas);
-- el CTA legible al menos 2 s (hoja de fotogramas);
-- −14 LUFS ±1 y pico ≤ −1 dBTP medido (`ebur128`; masteriza con −1,5 de consigna para quedar ≤ −1 medido);
-- peso del archivo dentro del límite de la plataforma;
-- cada cifra en pantalla con su fuente en `informe.md`.
+- lienzo y duración del entregable (`cine medir-video`);
+- la idea visible en los primeros 2 s y en el cierre (hoja de fotogramas; `juicio: true`);
+- el CTA legible al menos 2 s (hoja de fotogramas; `juicio: true`);
+- −14 LUFS ±1 y pico ≤ −1 dBTP medido (`cine medir-video`; masteriza con −1,5 de consigna para quedar ≤ −1 medido);
+- peso del archivo dentro del límite de la plataforma (`cine medir-video`, `formato.peso_mb`);
+- cada cifra en pantalla con su fuente en `informe.md` (`juicio: true`).

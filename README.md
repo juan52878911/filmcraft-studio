@@ -73,7 +73,7 @@ Le das una carpeta con el material crudo de un evento (videos, voz procesada, fo
    - keyframes y cortes en palabra;
    - loudness y pico de la mezcla `.wav`.
 
-   Después pasa un **crítico** y escribe un `informe.md`.
+   Después `cine puntuar` da de 1 a 5 lo que se puede contar (audio, imagen, ritmo, lectura, obligatorios y criterios), un único crítico con IA (`critico-juicio`) juzga historia, copy y originalidad, `cine nota` saca la nota, el veredicto y los 5 arreglos, y se escribe un `informe.md`.
 
 No exporta video salvo que se lo pidas.
 
@@ -108,7 +108,7 @@ La entrada general es `/filmcraft-studio:video <qué quieres>` (skill `director-
    - **Preguntas** por rondas (intención, contenido, estilo, movimiento y sonido, producción y entrega), con opciones y una recomendada ([`preguntas.md`](plugins/filmcraft-studio/skills/preproduccion/references/preguntas.md)).
    - **Referencias.** Se mide lo que pasas (`referencias.py`: paleta, cortes por minuto, BPM, loudness) y se lee su filosofía: la regla que genera el aspecto, dónde no actúa y cómo varía, no solo el aspecto ([`referencias.md`](plugins/filmcraft-studio/skills/preproduccion/references/referencias.md)).
    - **Concepto y design system.** El concepto lleva su metáfora. El design system lleva su vocabulario de movimientos y su sonido, con 2–3 direcciones en fotogramas fijos para elegir.
-   - **Crítica de originalidad** con el agente `critico-estilo`, contra lo genérico y contra el clon ([`originalidad.md`](plugins/filmcraft-studio/skills/preproduccion/references/originalidad.md)).
+   - **Crítica de originalidad** con el agente `critico-juicio`, contra lo genérico y contra el clon, con el techo que fijan las comparaciones medidas (`cine puntuar --comparaciones`) ([`originalidad.md`](plugins/filmcraft-studio/skills/preproduccion/references/originalidad.md)).
    - **Guion** por escenas con motor y herramienta ([`tipos.md`](plugins/filmcraft-studio/skills/director-video/references/tipos.md), [`guion.md`](plugins/filmcraft-studio/skills/director-video/references/guion.md)).
    - **Biblia aprobada** con criterios de aceptación ([`biblia.md`](plugins/filmcraft-studio/skills/preproduccion/references/biblia.md)): el video final se verifica contra ellos.
 2. **Herramientas.** `herramientas.py` dice qué hay instalado. [`herramientas.md`](plugins/filmcraft-studio/skills/director-video/references/herramientas.md) cuenta qué herramienta open source cubre cada necesidad y cómo se usa sin interfaz.
@@ -121,7 +121,7 @@ La entrada general es `/filmcraft-studio:video <qué quieres>` (skill `director-
    - `ia`: solo planos de relleno, desde imagen propia;
    - `foto`, `tarjeta`, voz (whisper, TTS local) y música.
 4. **Ensamblado en FilmCraft.** Todas las escenas entran como fuentes del mismo `plan.json`; FilmCraft pone los subtítulos, la marca, los SFX, la música con ducking y el grade del DS.
-5. **Verificación** con el listón profesional ([`reglas.md`](plugins/filmcraft-studio/skills/director-video/references/reglas.md)), `verify.py`, los criterios de la biblia y los agentes `critico` y `critico-estilo`.
+5. **Verificación** con el listón profesional ([`reglas.md`](plugins/filmcraft-studio/skills/director-video/references/reglas.md)): medir (`verify.py` en FilmCraft, `cine medir-video` por entregable) → `cine criterios` contra la biblia → `cine puntuar` → `critico-juicio` → `cine nota`, con vuelta a la mejor versión si una iteración empeora y A/B a ciegas solo cuando la diferencia es ambigua.
 
 ### Promos por código
 
@@ -159,7 +159,7 @@ flowchart LR
   C --> E[apply_plan<br/>fases A–E]
   E -->|headless| H[(proyecto nuevo .fcproj)]
   E -->|en vivo| L[FilmCraft abierto<br/>socket 9876]
-  H --> V[verify · critico · report]
+  H --> V[verify · cine puntuar · critico-juicio · cine nota · report]
   L --> V
 ```
 
@@ -174,6 +174,7 @@ Requisitos (macOS):
 - Python 3.9+ con los paquetes de [`requirements.txt`](plugins/filmcraft-studio/requirements.txt): `python3 -m pip install -r plugins/filmcraft-studio/requirements.txt`.
 - Opcionales, según el motor: Blender (escenas 3D), VHS (terminal grabada en los promos).
 - Xcode Command Line Tools, para compilar `swiftc` y el detector de caras de Apple Vision; no descarga modelos.
+- El binario `cine` (Rust, en `plugins/filmcraft-studio/motor/`): valida y elige design systems, mide los videos, comprueba los criterios de la biblia y puntúa. Los binarios van en `plugins/filmcraft-studio/bin/<so>-<arq>/` y no se suben a git; el lanzador `bin/cine` elige el de la plataforma o, si no hay, usa `motor/target/release/cine`. Para compilarlo hace falta Rust (`cargo`): `nix build` en la raíz del repo o `sh plugins/filmcraft-studio/motor/compilar.sh`.
 - Las fuentes del DS que uses (el precargado pide IosevkaTerm Nerd Font Mono y Menlo).
 
 `/filmcraft-studio:doctor` comprueba todo lo anterior.
@@ -229,12 +230,14 @@ plugins/filmcraft-studio/
 │   ├── montaje-headless/      pipeline autónomo y formato de plan.json
 │   ├── montaje-asistido/      puertas G0–G7 en la app
 │   └── imagen-a-video/        un solo plano animado desde una imagen, sin biblia
-├── agents/                    analista-material · director-montaje · critico · critico-estilo
+├── agents/                    analista-material · director-montaje · critico-juicio
+├── bin/cine                   lanzador del motor determinista (bin/<so>-<arq>/cine, fuera de git)
+├── motor/                     fuente Rust de `cine`: validar-ds · elegir-ds · medir-video · criterios · puntuar · nota · ab
 ├── commands/                  doctor · video · promo · editar · montar · ds-crear · ds-listar · ds-preview ·
 │                              analizar · brief · verificar · nota · entregar  (preproduccion es la skill)
 ├── scripts/                   fcengine · fclib · fcstyle · plan_compile · apply_plan · verify · report · render_sheet ·
 │                              analyze_media · transcribe_fc · camera_motion · vision_detect.swift · freezones · procesar_voz.sh ·
-│                              brief_infer · ds_studio · ds_from_image · ds_assets · ds_preview · ds_validate · music_bed ·
+│                              brief_infer · ds_studio · ds_from_image · ds_assets · ds_preview · music_bed ·
 │                              promo_fondos · promo_sfx · promo_preview · promo_gradmap ·
 │                              herramientas · referencias · motor_blender · blender/{fcblender,titular} · palmier/…
 ├── schemas/                   JSON Schema de ds, brief, biblia, guion y plan
@@ -262,16 +265,16 @@ Los ficheros que pasan de un paso a otro tienen su JSON Schema (2020-12) en [`pl
 
 | Esquema | Fichero | Quién lo comprueba |
 |---|---|---|
-| `ds.schema.json` | `design-systems/<id>/ds.json` | `ds_validate.py` (con `jsonschema`), más las referencias cruzadas que el esquema no expresa: rol → pista, rol → SFX del mapa, animaciones definidas, tamaño de los assets y contraste |
+| `ds.schema.json` | `design-systems/<id>/ds.json` | `bin/cine validar-ds`, más las referencias cruzadas que el esquema no expresa: rol → pista, rol → SFX del mapa, animaciones definidas, tamaño de los assets y contraste |
 | `brief.schema.json` | `brief.json` | los tests; cada campo lleva valor, origen y confianza |
-| `biblia.schema.json` | `preproduccion/biblia.json` | los tests; criterios de aceptación contra los que se verifica el video |
+| `biblia.schema.json` | `preproduccion/biblia.json` | los tests; criterios de aceptación contra los que se verifica el video (`bin/cine criterios`; cada uno con `medida` opcional o `juicio: true`) |
 | `guion.schema.json` | `guion.json` | los tests; escenas con motor, herramienta y hechos con fuente |
 | `plan.schema.json` | `plan.json` | los tests; lo que depende del DS lo comprueba `plan_compile.py` |
 
 ```bash
 cd plugins/filmcraft-studio
-python3 scripts/ds_validate.py --todos          # todos los DS del catálogo
-python3 scripts/ds_validate.py <id> --estricto  # uno, con los avisos como errores
+bin/cine validar-ds --todos          # todos los DS del catálogo
+bin/cine validar-ds <id> --estricto  # uno, con los avisos como errores
 ```
 
 ## Tests
@@ -279,6 +282,7 @@ python3 scripts/ds_validate.py <id> --estricto  # uno, con los avisos como error
 ```bash
 cd plugins/filmcraft-studio
 python3 -m pytest tests -q
+cargo test --manifest-path motor/Cargo.toml   # el motor cine
 ```
 
 Corren sin FilmCraft real y sin tocar el catálogo ni la caché del usuario (`CLAUDE_PLUGIN_DATA` apunta a un temporal). Cubren el análisis, la compilación del plan, su aplicación y verificación, los DS y sus esquemas (con un guion, una biblia y un plan reales en `tests/fixtures/`), los generadores de fondos y SFX de promo y `motor_blender.py` (sin Blender). Los que necesitan un paquete opcional (Pillow, jsonschema) se saltan si no está.
@@ -289,10 +293,10 @@ Corren sin FilmCraft real y sin tocar el catálogo ni la caché del usuario (`CL
 |---|---|
 | **Claude Code** (CLI, Desktop con Claude Code) | Todo: skills, comandos, agentes, MCP `filmcraft` y scripts. Es el destino principal. |
 | **Claude.ai / Claude Desktop** (skills subidas) | Sin FilmCraft ni macOS en el servidor: solo tienen sentido `preproduccion`, `brief-video`, `design-system-video` (maquetas PIL) y `promo-codigo` (PIL + numpy + ffmpeg), y solo si se suben con sus scripts. |
-| **Codex CLI, opencode, Gemini CLI, Cursor** | Leen [`AGENTS.md`](AGENTS.md): mapa de skills, cómo localizar los scripts con `FILMCRAFT_STUDIO_ROOT` y equivalencias de herramientas (preguntar, enseñar un archivo, subagentes). Los scripts son Python normal y no dependen del arnés. No probado de punta a punta. |
+| **Codex CLI, opencode, Gemini CLI, Cursor** | Leen [`AGENTS.md`](AGENTS.md): mapa de skills, cómo localizar los scripts con `FILMCRAFT_STUDIO_ROOT` y equivalencias de herramientas (preguntar, enseñar un archivo, subagentes). Los scripts son Python normal y `bin/cine` un binario: ninguno depende del arnés. No probado de punta a punta. |
 | **Agent SDK** | Cargando el plugin como local; `AskUserQuestion` y `SendUserFile` dependen del host (las skills dicen qué hacer si no están). |
 
-Requisitos de sistema: macOS (Apple Silicon probado en un M4) para el montaje con FilmCraft, Apple Vision (`swiftc`), `open -a FilmCraft` y las rutas de fuentes de `~/Library/Fonts`. El motor de código y Blender no dependen de macOS, pero en Linux no se han probado. Python 3.9+ con [`requirements.txt`](plugins/filmcraft-studio/requirements.txt).
+Requisitos de sistema: macOS (Apple Silicon probado en un M4) para el montaje con FilmCraft, Apple Vision (`swiftc`), `open -a FilmCraft` y las rutas de fuentes de `~/Library/Fonts`. El motor de código y Blender no dependen de macOS, pero en Linux no se han probado. Python 3.9+ con [`requirements.txt`](plugins/filmcraft-studio/requirements.txt). Rust (`cargo`) solo para compilar `cine` si no hay binario para la plataforma.
 
 El diseño completo está en [`docs/diseno.md`](docs/diseno.md).
 

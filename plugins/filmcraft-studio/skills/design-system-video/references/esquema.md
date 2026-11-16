@@ -1,6 +1,6 @@
 # Esquema de ds.json
 
-Esquema formal (JSON Schema 2020-12): `schemas/ds.schema.json` (en la raíz del plugin; desde Bash, `$S/../schemas/ds.schema.json`). `ds_validate.py` lo aplica si `jsonschema` está instalado y, además, comprueba lo que un esquema no expresa: rol → pista declarada, rol/transición → SFX presente en `sfx.mapa`, animación del rol definida en `animaciones`, transición de `preferencia` definida, fondos y mattes que existen y miden como el lienzo, contraste y fuentes instaladas (`ds_validate.py --todos` recorre el catálogo; `--estricto` convierte los avisos en errores).
+Esquema formal (JSON Schema 2020-12): `schemas/ds.schema.json` (en la raíz del plugin; desde Bash, `$S/../schemas/ds.schema.json`). `${CLAUDE_PLUGIN_ROOT}/bin/cine validar-ds <id>` lo aplica y, además, comprueba lo que un esquema no expresa: rol → pista declarada, rol/transición → SFX presente en `sfx.mapa`, animación del rol definida en `animaciones`, transición de `preferencia` definida, fondos y mattes que existen y miden como el lienzo, contraste y fuentes instaladas (`cine validar-ds --todos` recorre el catálogo; `--estricto` convierte los avisos en errores; `--json` para leerlo desde un script).
 
 Rutas `assets/…` son relativas a la carpeta del DS; `~/` se expande. Colores: un hex o el nombre de un color de `paleta`. Las claves marcadas *(informativa)* no las lee ningún script: son guía para quien monta o escribe la escena.
 
@@ -8,7 +8,7 @@ Rutas `assets/…` son relativas a la carpeta del DS; `~/` se expande. Colores: 
 |---|---|
 | `id`, `nombre`, `version`, `gramatica`, `descripcion` | Identidad. `id` es un slug `[a-z0-9-]` (es el nombre de la carpeta). `gramatica` nombra el conjunto de reglas (`brutalista@1`, `riso@1`, `tres-fases@1`…) |
 | `match` | `rutas` (subcadenas de la carpeta del material), `palabras`, `flyer`, `paleta_ref`: para elegir el DS solo |
-| `lienzo` | `ancho`, `alto`, `fps` de la secuencia, `plataforma`; opcional `variantes` `{nombre: {ancho, alto, nota}}` con otros formatos que produce el mismo DS (p. ej. `9x16` de un DS 16:9). Fondos y mattes miden como el lienzo; si miden como una variante, `ds_validate` avisa |
+| `lienzo` | `ancho`, `alto`, `fps` de la secuencia, `plataforma`; opcional `variantes` `{nombre: {ancho, alto, nota}}` con otros formatos que produce el mismo DS (p. ej. `9x16` de un DS 16:9). Fondos y mattes miden como el lienzo; si miden como una variante, `cine validar-ds` avisa |
 | `paleta` | `fondo`, `oscuro`, `claro`, `acento1` obligatorios; `rejilla`, `acento2`, `acento3` recomendados. **`claro` es siempre el color luminoso** (texto sobre cajas oscuras) y **`oscuro` el de las cajas y el texto oscuro**, también con un fondo claro: en un tema claro, `claro` ≈ `fondo` y `oscuro` es el color de la tinta |
 | `fuentes` | `titular`, `ui`, `meta`: `familia` y `estilo` como los nombra el sistema (FilmCraft las pide por familia) y `archivo` para PIL. Un `archivo` en `~/` no estará en otra máquina (aviso) |
 | `marca` | Textos fijos. Obligatorios `barra`, `titulo` (con `\n`), `cta`; los leen `plan_compile`/`ds_preview`: `hashtag`, `titulo_pill`, `cierre_palabras` (lista), `cierre_linea`, `cierre_pie`. `handle` *(informativa)* |

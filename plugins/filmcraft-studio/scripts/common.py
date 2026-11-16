@@ -18,6 +18,18 @@ USER_DS = Path(os.environ.get("FILMCRAFT_DS_CATALOGO") or DATA / "design-systems
 # El catálogo del usuario va PRIMERO: un DS aprobado con el id de uno precargado (modificar + aprobar) lo sustituye.
 DS_DIRS = [USER_DS, PLUGIN_DS]
 CINE = ROOT / "bin" / "cine"                              # motor determinista (Rust): validar-ds, elegir-ds, puntuar…
+
+
+def cine_bin():
+    """El binario de esta plataforma, como bin/cine (sin depender de uname ni dirname en el PATH)."""
+    import platform
+    so = {"darwin": "darwin", "linux": "linux", "windows": "windows"}.get(platform.system().lower(), platform.system().lower())
+    arq = {"x86_64": "x64", "amd64": "x64", "arm64": "arm64", "aarch64": "arm64"}.get(platform.machine().lower(), platform.machine())
+    exe = ".exe" if so == "windows" else ""
+    for c in (ROOT / "bin" / f"{so}-{arq}" / f"cine{exe}", ROOT / "motor" / "target" / "release" / f"cine{exe}"):
+        if c.exists():
+            return c
+    return CINE
 DRAFT_DS = DATA / "borradores"                            # DS sin aprobar (ds_studio.py)
 
 
@@ -227,9 +239,9 @@ def cine(*args, json_out=True):
     """Ejecuta el binario `cine` (bin/cine elige el de la plataforma). Con json_out, devuelve su JSON.
     Lanza ErrorExterno si el binario no está compilado o no da JSON."""
     try:
-        r = subprocess.run([str(CINE), *map(str, args)], capture_output=True, text=True)
+        r = subprocess.run([str(cine_bin()), *map(str, args)], capture_output=True, text=True)
     except OSError as ex:
-        raise ErrorExterno(f"no se pudo ejecutar {CINE}: {ex}") from ex
+        raise ErrorExterno(f"no se pudo ejecutar {cine_bin()}: {ex}") from ex
     if r.returncode == 127:
         raise ErrorExterno(r.stderr.strip() or "bin/cine sin compilar: sh motor/compilar.sh")
     if not json_out:

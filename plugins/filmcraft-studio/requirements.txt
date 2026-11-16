@@ -3,7 +3,7 @@
 pillow>=10            # todos los ds_*.py, render_sheet, verify, apply_plan, promo_*
 numpy>=1.26           # ds_from_image, promo_*, referencias, music_bed, escenas de promo
 opencv-python>=4.8    # camera_motion.py (barridos de cámara en analyze_media)
-jsonschema>=4.18      # opcional: ds_validate.py valida contra schemas/ds.schema.json (sin él, comprobaciones propias)
+jsonschema>=4.18      # opcional, solo para los tests de esquemas (cine validar-ds trae su propio validador)
 pytest>=7             # solo para los tests (tests/)
 # ref_metricas.py, imagen_a_video.py y la ficha de referencias.py usan opencv-python y numpy (arriba); opcionales, no se instalan solos:
 # onnxruntime>=1.17   # imagen_a_video.py --profundidad modelo.onnx (Depth Anything exportado)

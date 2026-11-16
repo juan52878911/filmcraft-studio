@@ -72,8 +72,10 @@ Reparte en dos pistas ("Hits" para colas largas, "SFX" para golpes cortos) para 
 - Mide por tramos: diálogo, solo música, tarjeta final. Una tarjeta final 15 dB por debajo del diálogo, o efectos más fuertes que la voz, son un error.
 
 ```bash
-ffmpeg -nostats -i out.mp4 -af ebur128=peak=true -f null - 2>&1 | grep -E "I:|Peak:"
+${CLAUDE_PLUGIN_ROOT}/bin/cine medir-video out.mp4 --out medidas.json   # audio.lufs, audio.pico_dbtp, audio.curva_s; vale también para un .wav
 ```
+
+Por tramos (diálogo, solo música, tarjeta final), lee `audio.curva_s` en los segundos de cada tramo.
 
 ## Trampas de FilmCraft con audio
 

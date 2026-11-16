@@ -18,16 +18,16 @@ Inspirado en la autoevaluación de video-use (MIT) y adaptado al render headless
 
 ## Audio
 
-- Loudness integrada y pico real del export o de una mezcla `.wav` headless (`filmcraft-cli --project P export mix.wav`).
-- Curva por segundo (`ebur128` con `metadata=1` y `lavfi.r128.S`) para ver el ducking y comparar con la referencia.
+- `${CLAUDE_PLUGIN_ROOT}/bin/cine medir-video <export.mp4 | mix.wav> --out medidas.json` sobre el export o sobre una mezcla `.wav` headless (`filmcraft-cli --project P export mix.wav`): loudness integrada, pico real, curva por segundo (`audio.curva_s`) para ver el ducking y compararla con la referencia y, en un video, cortes, planos, negros y flashes.
+- Con `compiled.json` (proyecto hecho con el plugin), `verify.py` mide lo mismo sobre la mezcla y además cortes en palabra, keyframes y textos frente a caras.
 - Silencios reales (`silencedetect`) para validar los tiempos de la transcripción.
 
 ## Revisión crítica (piezas que se publican)
 
-Para algo que se va a publicar, lanza un subagente crítico con el export, la lista de cortes y las referencias. Pídele que destroce, no que elogie:
-- un veredicto;
-- los problemas ordenados, con timecode y evidencia;
-- los 5 arreglos a hacer primero.
+Lo medible se puntúa sin IA y el subagente solo juzga lo que no se cuenta:
+1. `cine puntuar [--ds id] [--compiled compiled.json --verificacion verificacion.json] [--medidas medidas.json] [--biblia biblia.json] --out ejes.json`: audio, imagen, ritmo, lectura, obligatorios y criterios de 1 a 5, con bloqueantes y arreglos medidos.
+2. Subagente `critico-juicio` con `ejes.json`, las hojas y la lista de cortes (historia, copy, originalidad); su JSON va a `juicio.json`.
+3. `cine nota --ejes ejes.json --juicio juicio.json`: nota, veredicto (publicable / publicable con arreglos / no publicable) y los 5 arreglos a hacer primero. En la pasada siguiente, `--mejor <nota anterior> --bloq-anterior si|no` dice si es Mejora, Regresión (vuelve a la versión anterior) o Empate; A/B a ciegas (`cine ab`) solo si `ab_necesario`.
 
 ## Límites
 

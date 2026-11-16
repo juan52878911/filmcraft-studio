@@ -60,7 +60,11 @@ Se define aquí y las demás skills remiten a esta definición:
    - DS de FilmCraft: `ds_studio.py crear|modificar` (su `preview.png`) o `render_frame` de FilmCraft.
 
    `promo_preview.py` necesita un video ya renderizado: es para la entrega, no para este paso. Enseña los fotogramas con Read y, si la herramienta `SendUserFile` está disponible, envíalos; si no, da la ruta absoluta. Itera hasta que el usuario elija. No apruebes por él.
-7. **Crítica de originalidad** (`originalidad.md`). Antes de proponer aprobar, lanza el agente `critico-estilo` (prefiere el modelo más capaz disponible; si su modelo no está, lánzalo con `model: opus`; si no hay subagentes, haz tú la crítica en un paso aparte releyendo solo fotogramas, biblia y referencias). Antes, mide: `referencias.py --comparar` de cada fotograma contra cada referencia (y contra cada anti-referencia) y guarda la salida en `W/preproduccion/comparaciones/`. «Clon probable» o «misma maqueta» se arregla antes de la crítica; «estilo distinto» contra la referencia que se quería reproducir, también. Pásale los fotogramas, la biblia, las referencias y esas comparaciones, pero no tus conclusiones. Aplica sus arreglos, rehaz los fotogramas y enséñale al usuario el antes y el después.
+7. **Crítica de originalidad** (`originalidad.md`). Antes de proponer aprobar:
+   1. **Mide.** `python3 $S/referencias.py --comparar <ref> <fotograma> --json --out "$W/preproduccion/comparaciones/<ref>__<fotograma>.json"` de cada fotograma contra cada referencia y cada anti-referencia. «Clon probable» o «misma maqueta» se arregla antes de la crítica; «estilo distinto» contra la referencia que se quería reproducir, también.
+   2. **Puntúa.** `${CLAUDE_PLUGIN_ROOT}/bin/cine puntuar --ds <id> --biblia "$W/preproduccion/biblia.json" --comparaciones "$W/preproduccion/comparaciones" --out "$W/preproduccion/ejes.json"` (la biblia en borrador). Fija los techos de la originalidad y deja en `para_ia` los criterios de juicio.
+   3. **Juzga.** Lanza el subagente `critico-juicio` con `ejes.json` y la carpeta `W` (fotogramas de las direcciones, biblia, `referencias/`, comparaciones), sin tus conclusiones. Guarda su JSON en `W/preproduccion/juicio.json`. Si su modelo no está, lánzalo con `model: opus`; si no hay subagentes, juzga tú en un paso aparte releyendo solo lo que `agents/critico-juicio.md` dice que recibe.
+   4. **Nota.** `${CLAUDE_PLUGIN_ROOT}/bin/cine nota --ejes "$W/preproduccion/ejes.json" --juicio "$W/preproduccion/juicio.json"` da la nota (con los techos de la originalidad aplicados), el veredicto y los 5 arreglos; el `veredicto_estilo` (distinto, correcto pero genérico o clon) está en `juicio.json`. Aplícalos, rehaz los fotogramas y enséñale al usuario el antes y el después. Anota en la biblia (`criticas`) la iteración, el veredicto y qué cambió.
 8. **Guion y motores.** Escribe `guion.json` con `${CLAUDE_PLUGIN_ROOT}/skills/director-video/references/guion.md` y asigna motor y herramienta a cada escena (`motores.md`, `herramientas.md`), solo entre las que estén instaladas o tengan permiso para instalarse.
 9. **Biblia y aprobación.** Escribe `W/preproduccion/biblia.json` y `biblia.md` (`biblia.md` de la skill). Enséñale al usuario:
    - una tabla por bloque;
@@ -77,7 +81,7 @@ Con `--expres`, «video exprés», «rápido», «lo antes posible» o «exprés
 3. DS del catálogo tal cual, sin crear ni modificar; en una promo, la escena mínima con el esqueleto de `${CLAUDE_PLUGIN_ROOT}/skills/promo-codigo/references/motor.md`.
 4. **Una hoja de 2 fotogramas** (gancho y firma) con los textos reales. Aprobación = «sigue» o una nota.
 5. Biblia en estado `expres`, respuestas marcadas `inferido`/`defecto` y criterios por defecto (`preguntas.md`, «Criterios por defecto»).
-6. Render, verificación de criterios y **una** pasada de `critico-estilo` al final, sobre la hoja del video; sus arreglos se ofrecen como notas, no bloquean.
+6. Render, `cine medir-video` y `cine criterios` y **una** vuelta de `cine puntuar` → `critico-juicio` → `cine nota` al final, sobre la hoja del video; sus arreglos se ofrecen como notas, no bloquean (un criterio que no cumple, sí).
 
 Si el usuario trae referencias o rechaza los fotogramas dos veces, pasa al flujo completo desde la ronda C.
 

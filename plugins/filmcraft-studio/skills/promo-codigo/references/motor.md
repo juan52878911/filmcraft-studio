@@ -66,7 +66,7 @@ Contrato: `audio.py [fuente.mp4] salida.wav`, 48 kHz estéreo, en la rejilla de 
 2. Audio y máster: `-14 LUFS`, `≤ -1 dBTP`. Dos pasadas de `loudnorm` (la primera con `print_format=json` mide; la segunda aplica `measured_*` con `linear=true`) y `alimiter` al final; consigna `TP=-1.5` para quedar por debajo de −1 medido.
 3. Imagen: `python3 escena.py … build/video.mp4`, con `FILMCRAFT_STUDIO_SCRIPTS` exportada (la `$S` del SKILL.md). `render.sh` empieza con `: "${FILMCRAFT_STUDIO_SCRIPTS:?exporta la ruta de scripts/ del plugin}"`.
 4. Mezcla: `-c:v libx264 -crf 22 -pix_fmt yuv420p -c:a aac -b:a 192k -movflags +faststart -shortest`.
-5. Medida: `ffmpeg -i salida.mp4 -af ebur128=peak=true -f null -` e imprime `I:` y `Peak:`.
+5. Medida: `"$FILMCRAFT_STUDIO_SCRIPTS/../bin/cine" medir-video salida.mp4 --out salida.medidas.json` e imprime `audio.lufs` y `audio.pico_dbtp` (la verificación usa ese mismo JSON).
 
 Con `set -euo pipefail`, `cd "$(dirname "$0")"` y un argumento por estilo o formato (`./render.sh brasa|riso_v`, `FMTS=9x16 ./render.sh`).
 
