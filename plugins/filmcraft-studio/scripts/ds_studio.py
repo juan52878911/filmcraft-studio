@@ -41,7 +41,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).parent))
-from common import DATA, DRAFT_DS, ROOT, USER_DS, ds_dir, jload, jsave, list_ds, load_ds, pil_font  # noqa: E402
+from common import DATA, DRAFT_DS, ROOT, USER_DS, ErrorExterno, cine, ds_dir, jload, jsave, list_ds, load_ds, pil_font  # noqa: E402
 
 DRAFTS = DRAFT_DS
 THUMBS = DATA / "thumbs"          # miniaturas de los DS precargados: la carpeta del plugin puede ser de solo lectura
@@ -146,11 +146,10 @@ def regen(d, frame=None):
         from ds_assets import make
         ds["fondos"], ds["mattes"] = make(ds, d / "assets", ds["lienzo"]["ancho"], ds["lienzo"]["alto"])
         jsave(d / "ds.json", ds)
-    v = subprocess.run([sys.executable, str(here / "ds_validate.py"), str(d), "--json"], capture_output=True, text=True)
     try:
-        val = json.loads(v.stdout)
-    except json.JSONDecodeError:
-        val = {"ok": False, "errores": [f"ds_validate.py no terminó: {(v.stderr or v.stdout)[-400:]}"], "avisos": []}
+        val = cine("validar-ds", d, "--json")
+    except ErrorExterno as ex:
+        val = {"ok": False, "errores": [f"cine validar-ds no terminó: {ex}"], "avisos": []}
     prev = d / "preview.png"
     prev.unlink(missing_ok=True)
     (d / "thumb.png").unlink(missing_ok=True)
@@ -380,7 +379,7 @@ def main():
         d = DRAFTS / a.id
         if not d.exists():
             sys.exit(f"no hay borrador '{a.id}'")
-        val = subprocess.run([sys.executable, str(Path(__file__).parent / "ds_validate.py"), str(d)], capture_output=True, text=True)
+        val = cine("validar-ds", d, json_out=False)
         if val.returncode:
             motivo = "\n".join(x for x in (val.stdout.strip(), val.stderr.strip()[-800:]) if x) or f"código {val.returncode}, sin salida"
             sys.exit("no se puede aprobar, la validación falla:\n" + motivo)

@@ -1,33 +1,38 @@
-"""ds_validate.py más estricto: tamaños, SFX de roles, animaciones, claves anidadas y esquema."""
-import copy
+"""cine validar-ds (antes ds_validate.py): tamaños, SFX de roles, animaciones, claves anidadas y esquema.
+Se ejecuta el binario (bin/cine); sin binario compilado los tests se saltan."""
 import json
 import shutil
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
 
 PLUGIN = Path(__file__).resolve().parent.parent
-SCRIPTS = PLUGIN / "scripts"
-sys.path.insert(0, str(SCRIPTS))
-
-from common import load_ds  # noqa: E402
-import ds_validate  # noqa: E402
+CINE = PLUGIN / "bin" / "cine"
 
 DS_IDS = sorted(p.name for p in (PLUGIN / "design-systems").iterdir() if (p / "ds.json").exists())
 
 
-def font_ok(monkeypatch):
+def cine(*args, env=None):
+    r = subprocess.run([str(CINE), *map(str, args)], capture_output=True, text=True, env=env)
+    if r.returncode == 127:
+        pytest.skip("bin/cine sin compilar (motor/compilar.sh)")
+    return r
+
+
+def check(d, estricto=False):
+    r = cine("validar-ds", d, "--json", *(["--estricto"] if estricto else []))
+    return json.loads(r.stdout)
+
+
+def sin_fuentes(xs):
     """Las fuentes del Mac de quien escribió los DS no tienen por qué estar en la máquina del test."""
-    monkeypatch.setattr(ds_validate, "font_file", lambda f: str(SCRIPTS / "common.py"))
+    return [e for e in xs if not (e.startswith("fuente '") and "no está instalada" in e)]
 
 
 @pytest.mark.parametrize("ds_id", DS_IDS)
-def test_los_ds_precargados_validan(ds_id, monkeypatch):
-    font_ok(monkeypatch)
-    err, _ = ds_validate.validate(load_ds(ds_id), json.loads((PLUGIN / "design-systems" / ds_id / "ds.json").read_text()))
-    assert err == []
+def test_los_ds_precargados_validan(ds_id):
+    assert sin_fuentes(check(PLUGIN / "design-systems" / ds_id)["errores"]) == []
 
 
 def test_hay_siete_ds():
@@ -45,17 +50,17 @@ def errores(d, cambia=None):
     if cambia:
         cambia(raw)
         (d / "ds.json").write_text(json.dumps(raw))
-    return ds_validate.validate(load_ds(d), raw)
+    r = check(d)
+    return sin_fuentes(r["errores"]), r["avisos"]
 
 
-def test_sfx_de_rol_fuera_del_mapa(tmp_path, monkeypatch):
-    font_ok(monkeypatch)
+
+def test_sfx_de_rol_fuera_del_mapa(tmp_path):
     err, _ = errores(copia(tmp_path), lambda j: j["sfx"]["mapa"].pop("tecla"))
     assert any("sfx 'tecla' no está en sfx.mapa" in e for e in err)
 
 
-def test_fondo_de_otro_tamano(tmp_path, monkeypatch):
-    font_ok(monkeypatch)
+def test_fondo_de_otro_tamano(tmp_path):
     d = copia(tmp_path)
     from PIL import Image
     Image.new("RGB", (100, 100)).save(d / "assets/bg-title.png")
@@ -63,8 +68,7 @@ def test_fondo_de_otro_tamano(tmp_path, monkeypatch):
     assert any("fondos.titulo: mide 100x100" in e for e in err)
 
 
-def test_fondo_con_tamano_de_variante_es_aviso(tmp_path, monkeypatch):
-    font_ok(monkeypatch)
+def test_fondo_con_tamano_de_variante_es_aviso(tmp_path):
     d = copia(tmp_path, "promo-tres-fases")
     from PIL import Image
     Image.new("RGB", (1080, 1920)).save(d / "assets/bg-plain.png")
@@ -73,40 +77,33 @@ def test_fondo_con_tamano_de_variante_es_aviso(tmp_path, monkeypatch):
     assert any("variante '9x16'" in w for w in warn)
 
 
-def test_animacion_sin_definir(tmp_path, monkeypatch):
-    font_ok(monkeypatch)
+def test_animacion_sin_definir(tmp_path):
     err, _ = errores(copia(tmp_path), lambda j: j["roles_texto"]["titulo"].update(anim="calorEntra"))
     assert any("'calorEntra' sin definir" in e for e in err)
 
 
-def test_clave_anidada_que_los_scripts_leen_a_pelo(tmp_path, monkeypatch):
-    font_ok(monkeypatch)
+def test_clave_anidada_que_los_scripts_leen_a_pelo(tmp_path):
     err, _ = errores(copia(tmp_path), lambda j: j["continuidad"].pop("zoom_crash"))
     assert any("continuidad.zoom_crash" in e or "zoom_crash" in e for e in err)
 
 
-def test_color_null_no_revienta(tmp_path, monkeypatch):
-    font_ok(monkeypatch)
+def test_color_null_no_revienta(tmp_path):
     err, _ = errores(copia(tmp_path), lambda j: j["roles_texto"]["meta"].update(color=None))
     assert isinstance(err, list)
 
 
-def test_clave_mal_escrita_en_un_rol(tmp_path, monkeypatch):
+def test_clave_mal_escrita_en_un_rol(tmp_path):
     pytest.importorskip("jsonschema")
-    font_ok(monkeypatch)
     err, _ = errores(copia(tmp_path), lambda j: j["roles_texto"]["subtitulo"].update(tamm=70))
     assert any("tamm" in e for e in err)
 
 
-def test_sin_jsonschema_hay_comprobaciones_propias(tmp_path, monkeypatch):
-    font_ok(monkeypatch)
-    monkeypatch.setattr(ds_validate, "schema_errors", lambda raw: None)
+def test_comprobaciones_propias_ademas_del_esquema(tmp_path):
     err, _ = errores(copia(tmp_path), lambda j: j["musica"].pop("bajo_voz_db"))
     assert "falta 'musica.bajo_voz_db'" in err
 
 
-def test_errores_sin_duplicados(tmp_path, monkeypatch):
-    font_ok(monkeypatch)
+def test_errores_sin_duplicados(tmp_path):
     err, _ = errores(copia(tmp_path), lambda j: j["sfx"]["mapa"].clear())
     assert len(err) == len(set(err))
 
@@ -133,31 +130,18 @@ def test_esquemas_de_ejemplos():
 
 
 def test_cli_todos_y_estricto(tmp_path):
-    env = {"CLAUDE_PLUGIN_DATA": str(tmp_path / "data"), "PATH": "/usr/bin:/bin",
-           "HOME": str(Path.home()), "PYTHONPYCACHEPREFIX": str(tmp_path / "pyc")}
-    r = subprocess.run([sys.executable, str(SCRIPTS / "ds_validate.py"), "--todos", "--json"], capture_output=True,
-                       text=True, env=env)
-    res = json.loads(r.stdout)
+    env = {"CLAUDE_PLUGIN_DATA": str(tmp_path / "data"), "PATH": "/usr/bin:/bin", "HOME": str(Path.home())}
+    res = json.loads(cine("validar-ds", "--todos", "--json", env=env).stdout)
     assert len(res) == 7
-    r = subprocess.run([sys.executable, str(SCRIPTS / "ds_validate.py")], capture_output=True, text=True, env=env)
-    assert r.returncode == 2                                # sin DS ni --todos: uso
+    assert cine("validar-ds", env=env).returncode == 2       # sin DS ni --todos: uso
 
 
-def test_estricto_convierte_avisos(tmp_path, monkeypatch):
-    font_ok(monkeypatch)
+def test_estricto_convierte_avisos(tmp_path):
     d = copia(tmp_path, "promo-tres-fases")
     from PIL import Image
     Image.new("RGB", (1080, 1920)).save(d / "assets/bg-plain.png")
-    r = ds_validate.check(str(d), estricto=True)
+    r = check(d, estricto=True)
     assert not r["ok"] and any("(estricto)" in e for e in r["errores"])
-
-
-def test_copia_profunda_no_muta(monkeypatch):
-    font_ok(monkeypatch)
-    ds = load_ds("promo-riso")
-    antes = copy.deepcopy(ds)
-    ds_validate.validate(ds)
-    assert ds == antes
 
 
 # DS que daban OK y revientan plan_compile o apply_plan (re-auditoría 2, hallazgo 3): cada uno es error claro
@@ -181,8 +165,7 @@ ROTOS = {
 
 
 @pytest.mark.parametrize("caso", list(ROTOS))
-def test_ds_roto_da_error(tmp_path, monkeypatch, caso):
-    font_ok(monkeypatch)
+def test_ds_roto_da_error(tmp_path, caso):
     cambia, texto = ROTOS[caso]
     err, _ = errores(copia(tmp_path, "sbg-brutalista-s5"), cambia)
     assert any(texto in e for e in err), err
@@ -193,12 +176,12 @@ def test_color_no_hex_por_cli_sin_traza(tmp_path):
     raw = json.loads((d / "ds.json").read_text())
     raw["paleta"]["claro"] = "blanco"
     (d / "ds.json").write_text(json.dumps(raw))
-    r = subprocess.run([sys.executable, str(SCRIPTS / "ds_validate.py"), str(d)], capture_output=True, text=True)
-    assert r.returncode == 1 and "Traceback" not in r.stderr and "no hex" in r.stdout
+    r = cine("validar-ds", d)
+    assert r.returncode == 1 and "no hex" in r.stdout
 
 
 def test_ds_json_roto_es_error_y_no_traza(tmp_path):
     d = copia(tmp_path, "sbg-brutalista-s5")
     (d / "ds.json").write_text("{ roto")
-    r = ds_validate.check(d)
+    r = check(d)
     assert not r["ok"] and "no se puede cargar" in r["errores"][0]

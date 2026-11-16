@@ -17,6 +17,7 @@ DATA = Path(os.environ.get("CLAUDE_PLUGIN_DATA") or Path.home() / ".cache/filmcr
 USER_DS = Path(os.environ.get("FILMCRAFT_DS_CATALOGO") or DATA / "design-systems")   # catálogo del usuario
 # El catálogo del usuario va PRIMERO: un DS aprobado con el id de uno precargado (modificar + aprobar) lo sustituye.
 DS_DIRS = [USER_DS, PLUGIN_DS]
+CINE = ROOT / "bin" / "cine"                              # motor determinista (Rust): validar-ds, elegir-ds, puntuar…
 DRAFT_DS = DATA / "borradores"                            # DS sin aprobar (ds_studio.py)
 
 
@@ -220,6 +221,23 @@ def cubre(obligatorio, textos):
 # ---------- herramientas externas ----------
 class ErrorExterno(RuntimeError):
     """Una herramienta externa (ffmpeg, ffprobe, whisper-cli, swiftc, filmcraft-cli…) falta o ha fallado."""
+
+
+def cine(*args, json_out=True):
+    """Ejecuta el binario `cine` (bin/cine elige el de la plataforma). Con json_out, devuelve su JSON.
+    Lanza ErrorExterno si el binario no está compilado o no da JSON."""
+    try:
+        r = subprocess.run([str(CINE), *map(str, args)], capture_output=True, text=True)
+    except OSError as ex:
+        raise ErrorExterno(f"no se pudo ejecutar {CINE}: {ex}") from ex
+    if r.returncode == 127:
+        raise ErrorExterno(r.stderr.strip() or "bin/cine sin compilar: sh motor/compilar.sh")
+    if not json_out:
+        return r
+    try:
+        return json.loads(r.stdout)
+    except json.JSONDecodeError as ex:
+        raise ErrorExterno(f"cine {args[0] if args else ''} no dio JSON (código {r.returncode}): {(r.stderr or r.stdout)[-300:]}") from ex
 
 
 def tiene(binario):

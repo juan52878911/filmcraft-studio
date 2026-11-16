@@ -9,23 +9,7 @@ import common
 PLUGIN = Path(__file__).resolve().parent.parent
 
 
-def test_componentes_no_suben_hasta_la_raiz():
-    rutas = ["/private/tmp/x-Users-juan-Documents-GitHub-kindling/abc/e2e/material/videos/charla.mp4"]
-    c = bi.componentes(rutas)
-    assert c == ["material", "videos", "charla.mp4"]
-    assert not any("kindling" in x for x in c)
-    # varias rutas: la carpeta común y lo que cuelga de ella
-    c = bi.componentes(["/a/Reto de certificacion S5/videos/1.mp4", "/a/Reto de certificacion S5/fotos/2.jpg"])
-    assert "Reto de certificacion S5" in c and "videos" in c and "fotos" in c and "a" in c
-
-
-def test_casa_ruta_por_palabra_entera():
-    assert bi.casa_ruta("kindling", ["kindling-1.0", "videos"])
-    assert not bi.casa_ruta("kindling", ["-Users-juan-GitHub-kindlingx"])
-    assert not bi.casa_ruta("promo", ["promocion"])
-    assert bi.casa_ruta("Reto de certificación", ["Reto de certificacion S5"])     # tildes y mayúsculas
-    assert not bi.casa_ruta("Reto de certificacion", ["Reto", "de certificacion"])  # en un mismo componente
-    assert bi.casa_ruta("RetoCertEAN", ["RetoCertEAN-2025"])
+# componentes() y casa_ruta() viven ahora en el motor (motor/src/elegir.rs, con sus tests).
 
 
 def test_match_ds_material_de_camara_bajo_carpeta_kindling():

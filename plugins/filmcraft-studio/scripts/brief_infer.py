@@ -11,74 +11,16 @@ En asistido se pregunta lo que tenga confianza < 0,6; en headless se usa y queda
 """
 import argparse
 import json
-import os
 import re
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from common import jload, jsave, list_ds, load_ds, norm, sin_tildes  # noqa: E402,F401
+from common import cine, jload, jsave, list_ds, load_ds, norm, sin_tildes  # noqa: E402,F401
 
 PREMIO = re.compile(r"^(gan[óoa]\w*|premio\w*|regal\w*|figurit\w*|sorteo\w*|ganador\w*)$", re.I)
 NUM = re.compile(r"^\d+([.,]\d+)?$")
 UNIDAD = re.compile(r"^(dólares|dolares|usd|créditos|creditos|por|%|mil|millones)[,.]?$", re.I)
-
-
-def hexd(a, b):
-    return sum((int(a[i:i + 2], 16) - int(b[i:i + 2], 16)) ** 2 for i in (1, 3, 5)) ** 0.5 / 441.7
-
-
-def componentes(rutas, arriba=2):
-    """Nombres de carpeta y fichero con los que casar `match.rutas`: los del material (bajo la carpeta común
-    de las rutas) y solo `arriba` carpetas por encima de ella (la del evento suele ser la madre de videos/).
-    Nunca la ruta absoluta entera: un scratchpad bajo «…-GitHub-kindling/» no es un evento de kindling."""
-    ps = [Path(r).expanduser() for r in rutas if str(r).strip()]
-    if not ps:
-        return []
-    bases = [p.parent if (p.suffix or p.is_file()) else p for p in ps]
-    try:
-        base = Path(os.path.commonpath([str(b) for b in bases]))
-    except ValueError:                          # rutas mezcladas (relativas y absolutas)
-        base = None
-    out = []
-    if base is not None:
-        out += [x for x in base.parts[-arriba:] if x not in ("/", "")]
-        for p in ps:
-            try:
-                out += list(p.relative_to(base).parts)
-            except ValueError:
-                out.append(p.name)
-    else:
-        for p in ps:
-            out += [x for x in p.parts[-(arriba + 1):] if x not in ("/", "")]
-    return list(dict.fromkeys(out))
-
-
-def _palabras(s):
-    return [t for t in re.split(r"[^0-9a-z]+", sin_tildes(str(s).lower())) if t]
-
-
-def casa_ruta(termino, comps):
-    """¿El término de `match.rutas` aparece como palabras ENTERAS y seguidas en algún componente?"""
-    q = _palabras(termino)
-    if not q:
-        return False
-    for c in comps:
-        w = _palabras(c)
-        if any(w[i:i + len(q)] == q for i in range(len(w) - len(q) + 1)):
-            return True
-    return False
-
-
-def mismo_fichero(a, b):
-    """¿Dos rutas son el mismo fichero o tienen el mismo contenido?"""
-    try:
-        pa, pb = Path(a), Path(b)
-        if pa.resolve() == pb.resolve():
-            return True
-        return pa.stat().st_size == pb.stat().st_size and pa.read_bytes() == pb.read_bytes()
-    except OSError:
-        return False
 
 
 def es_promo(ds):
@@ -87,37 +29,17 @@ def es_promo(ds):
 
 
 def match_ds(flyer=None, ruta="", para="todos"):
-    """[(score, id, detalle)] ordenado: media de las señales disponibles (rutas/palabras y parecido de paleta
-    con el flyer); con las dos, 50 % cada una.
+    """[(score, id, detalle)] ordenado, de `cine elegir-ds` (motor Rust): media de las señales disponibles
+    (rutas por palabras enteras de los nombres de carpeta del material y parecido ΔE en OKLab de la paleta
+    del flyer con `match.paleta_ref`); con las dos, 50 % cada una.
 
-    `ruta`: una ruta o lista de rutas (las del material); se casa por componentes, ver componentes().
-    `para`: "camara" deja fuera los DS de promo, "promo" solo los de promo, "todos" no filtra."""
-    pal = None
+    `ruta`: una ruta o lista de rutas (las del material). `para`: "camara" deja fuera los DS de promo,
+    "promo" solo los de promo, "todos" no filtra."""
+    rutas = [str(ruta)] if isinstance(ruta, (str, Path)) else [str(r) for r in ruta]
+    args = ["elegir-ds", "--json", "--para", para, "--rutas-json", json.dumps([r for r in rutas if r.strip()])]
     if flyer and Path(flyer).exists():
-        from ds_from_image import palette, roles
-        cl, _ = palette(flyer)
-        p, _ = roles(cl)
-        pal = [p["fondo"], p["acento1"], p["acento2"], p["acento3"], p["claro"]]
-    comps = componentes([ruta] if isinstance(ruta, (str, Path)) else list(ruta))
-    out = []
-    for d in list_ds():
-        ds = load_ds(d)
-        if (para == "camara" and es_promo(ds)) or (para == "promo" and not es_promo(ds)):
-            continue
-        m = ds.get("match", {})
-        r = 1.0 if any(casa_ruta(x, comps) for x in m.get("rutas", []) if x) else 0.0
-        c = None
-        if pal and m.get("paleta_ref"):
-            ref = m["paleta_ref"]
-            c = 1 - sum(min(hexd(a, b) for b in ref) for a in pal) / len(pal)
-        if pal and m.get("flyer") and mismo_fichero(flyer, m["flyer"]):
-            c = 1.0                                   # es el flyer del que salió este DS
-        # pesos sobre las señales que HAY: con solo flyer, el color es todo el score (antes 50 % de un 0 de
-        # rutas inexistentes: el flyer original sacaba 0,47 contra su propio DS y la confianza no pasaba de 0,57)
-        wr, wc = (1 if comps else 0), (1 if pal else 0)
-        score = (wr * r + wc * (c if c is not None else 0)) / (wr + wc) if wr + wc else 0.0
-        out.append((round(score, 3), ds["id"], {"ruta": r, "color": round(c, 3) if c is not None else None}))
-    return sorted(out, reverse=True)
+        args += ["--flyer", str(flyer)]
+    return [(r["score"], r["id"], {"ruta": r["ruta"], "color": r["color"]}) for r in cine(*args)]
 
 
 def dicho(entrada, ws, i):
@@ -251,9 +173,10 @@ def main():
     ap.add_argument("--para", choices=["todos", "camara", "promo"], default="todos",
                     help="con --solo-ds: camara deja fuera los DS de promo; promo, solo esos")
     a = ap.parse_args()
-    if a.solo_ds:
-        for s, i, det in match_ds(a.flyer, a.ruta, a.para):
-            print(f"{s:5.2f}  {i:28} ruta={det['ruta']} color={det['color']}")
+    if a.solo_ds:                       # atajo antiguo: es `bin/cine elegir-ds`
+        r = cine("elegir-ds", "--para", a.para, *(["--ruta", a.ruta] if a.ruta else []),
+                 *(["--flyer", a.flyer] if a.flyer else []), json_out=False)
+        print(r.stdout, end="")
         return
     if not a.out:
         ap.error("falta --out (o usa --solo-ds)")
