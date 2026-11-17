@@ -13,6 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from common import color  # noqa: E402
+import pegatina  # noqa: E402
 
 
 def measure(ds, role, text, tam=None):
@@ -64,11 +65,21 @@ class Styler:
             return v[i % len(v)]
         return v
 
-    def text(self, role, text, start, dur, pos, variante=0, colores=None, anim=None, tam=None, pista=None, align=None):
-        """Crea un texto con el estilo del rol. pos = (cx, cy) normalizado (centro; borde izquierdo si align Left)."""
+    def text(self, role, text, start, dur, pos, variante=0, colores=None, anim=None, tam=None, pista=None, align=None,
+             resaltar=None):
+        """Crea un texto con el estilo del rol. pos = (cx, cy) normalizado (centro; borde izquierdo si align Left).
+
+        pegatina@1: el rol puede llevar `inclina` (grados, o lista por variante), `sombra` dura
+        {color, dist, angulo}, `contorno` {color, ancho}, `prefijo` {texto, color} y una animación de
+        pegatina.ANIMS; `resaltar` = [[inicio, fin), …] en caracteres se pinta con el color `resalta` del rol.
+        """
         r = self.role(role)
         f = self.ds["fuentes"][r["fuente"]]
         trk = pista or self._pick(r.get("pistas") or r["pista"], variante)
+        pre = r.get("prefijo") or {}
+        if pre.get("texto") and not text.startswith(pre["texto"].strip()):
+            text = pre["texto"] + text
+            resaltar = [[a + len(pre["texto"]), b + len(pre["texto"])] for a, b in (resaltar or [])]
         g = self.e.new_text(text, trk, start, dur, f["familia"], f.get("estilo", "Regular"), tam or r["tam"])
         clip, layer = g["clip"], g["layer"]
         tc, bc = colores or (r.get("color", "claro"), self._pick(r.get("fondo"), variante))
@@ -79,7 +90,27 @@ class Styler:
             m = r.get("margen", 40)
             props.update(background=True, background_color=color(self.ds, bc), background_opacity=100,
                          background_size=m, background_radius=0)
+        if r.get("sombra"):
+            sb = r["sombra"]
+            props.update(shadow=True, shadow_color=color(self.ds, sb.get("color", "oscuro")), shadow_opacity=100,
+                         shadow_blur=sb.get("blur", 0), shadow_distance=sb.get("dist", 6), shadow_angle=sb.get("angulo", 135),
+                         shadow_size=sb.get("tam", 0))
+        if r.get("contorno"):
+            cn = r["contorno"]
+            props.update(stroke=True, stroke_color=color(self.ds, cn.get("color", "oscuro")), stroke_width=cn.get("ancho", 3))
+        if r.get("pista_letras"):
+            props["tracking"] = r["pista_letras"]
+        rot = float(self._pick(r.get("inclina", 0), variante) or 0)
+        if rot:
+            props["rotation"] = rot
         self.e.x("graphics.set", {"clip": clip, "layer": layer, "props": props})
+        if pre.get("texto") and pre.get("color"):
+            self.e.x("graphics.setCharStyle", {"clip": clip, "layer": layer, "start": 0, "end": len(pre["texto"].rstrip()),
+                                               "style": {"color": color(self.ds, pre["color"])}})
+        if resaltar and r.get("resalta"):
+            for a, b in resaltar:
+                self.e.x("graphics.setCharStyle", {"clip": clip, "layer": layer, "start": a, "end": b,
+                                                   "style": {"color": color(self.ds, r["resalta"])}})
         cx, cy = pos[0] * self.W, pos[1] * self.H
         L, (w, h) = self.e.center_layer(clip, layer, cx, cy, al)
         x0 = cx if al == "Left" else cx - w / 2
@@ -89,8 +120,36 @@ class Styler:
             self.pop_in(clip, L["effectIndex"], start)
         elif a == "calorEntra":
             self.calor_entra(clip, L["effectIndex"], start)
+        elif pegatina.es_pegatina(a):
+            eff = L["effectIndex"]
+            if a == "escribe":
+                eff = self.escribe(clip, layer, start, text, len(pre.get("texto", "")), r, x0 - m, x0 + w + m)
+            desde = -1 if (al != "Left" and cx > self.W * 0.55) else 1
+            self.animar(clip, eff, eff, start, dur, a, [cx, cy], rot, desde=desde)
         return {"clip": clip, "layer": layer, "box": [round(b, 4) for b in box], "rol": role, "texto": text,
                 "start": start, "dur": dur, "pista": trk}
+
+    def animar(self, clip, eff, eff_op, start, dur, anim, pos, rot=0.0, escala=100.0, desde=1):
+        """Entrada pegatina (golpe, desliza, caída, pop, escribe) y salida en fundido, sobre un efecto del clip.
+
+        En un texto, `eff` y `eff_op` son el índice de su capa (graphic_text tiene escala, giro, posición y
+        opacidad); en una imagen, "motion" y "opacity". pos en píxeles del lienzo.
+        """
+        rows = pegatina.keyframes(self.ds, anim, dur, pos, rot, escala, desde, bf=self.bf)
+        for p, rr in rows.items():
+            self.e.kf(clip, eff_op if p == "opacity" else eff, p, rr, start)
+
+    def escribe(self, clip, layer, start, text, n_pre, r, x_ini, x_fin):
+        """Kicker que se escribe: un Crop por la derecha que descubre la caja y el texto carácter a carácter."""
+        from common import pil_font
+        f = pil_font(self.ds["fuentes"][r["fuente"]], r["tam"])
+        x_pre = x_ini + (f.getlength(text[:n_pre]) + r.get("margen", 0) if n_pre else 0)
+        t = self.e.snap(pegatina.escritura(self.ds, max(1, len(text) - n_pre)))
+        self.e.x("effects.apply", {"clips": [clip], "effect": "crop"})
+        der = lambda x: round(max(0.0, min(100.0, 100 * (1 - x / self.W))), 3)   # noqa: E731
+        self.e.kf(clip, "crop", "right", [(0, der(x_pre), "linear"), (t, der(x_fin + 2), "linear")], start)
+        # el Crop entra delante en la pila: el índice de la capa de texto cambia
+        return [l for l in self.e.layers(clip) if l["layer"] == layer][0]["effectIndex"]
 
     def pop_in(self, clip, eff, start):
         p = self.ds["animaciones"]["popIn"]
@@ -115,8 +174,21 @@ class Styler:
         """Aparición por palabras: una capa por palabra en un solo gráfico, alineado a la izquierda."""
         r = self.role(role)
         f = self.ds["fuentes"][r["fuente"]]
-        wr = self.ds["animaciones"]["wordReveal"]
         lines = lines or (text.split("\n") if "\n" in text else self.wrap(text, r.get("max_chars", 12)))
+        if pegatina.es_pegatina(r.get("anim")):
+            # pegatina@1: el titular es UNA pegatina (caja, sombra dura, inclinación) que entra de golpe
+            txt = "\n".join(lines)
+            from common import pil_font
+            tam, m = r["tam"], r.get("margen", 0) if r.get("fondo") else 0
+            avail = self.W * (1 - r["x"] - 0.05) - 2 * m         # cabe con la caja, la sombra y el giro
+            widest = max(pil_font(f, tam).getlength(ln) for ln in lines)
+            if widest > avail:
+                tam = round(tam * avail / widest, 1)
+            _, h = measure(self.ds, role, txt, tam)
+            out = self.text(role, txt, start, dur, (r["x"], r["y"] + h / 2), align="Left", pista=pista, tam=tam)
+            out["palabras"] = len(txt.split())
+            return out
+        wr = self.ds["animaciones"]["wordReveal"]
         x0, y0 = r["x"] * self.W, r["y"] * self.H
         # tamaño que cabe en el ancho (fuentes proporcionales anchas) y avance real de cada palabra
         from common import pil_font

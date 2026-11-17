@@ -53,6 +53,7 @@ El director escribe la intención; `plan_compile.py` resuelve lo mecánico (lím
 | `textos` | Rótulos del bloque (ver abajo). En `tarjeta` y `cierre`, si se omiten, salen de `marca` del DS |
 | `sfx` | Extras `{"tipo": clave de ds.sfx.mapa, "t": desfase, "db": opcional}`. Los de animaciones y transiciones se ponen solos |
 | `capas` | Imágenes encima del plano: `{"img"|"fondo", "pista": "Producto"|"Tarjeta", "t", "dur", "entra": "der"|"izq", "escala", "pos"}` |
+| `capas[].tarjeta` | pegatina@1: tarjeta compuesta `{"tipo": "ponente"|"fecha"|"qr"|"logo"|"flecha", …}` anclada con `palabra` o `t`; dura hasta el final del bloque si no hay `dur`; `anim`, `inclina`, `pos` cambian lo que da el DS (ver `design-system-video/references/pegatina.md`) |
 | `subtitulos` | `false` para no subtitular el bloque |
 | `resumen` | Una línea para el informe y la tabla de G3 |
 

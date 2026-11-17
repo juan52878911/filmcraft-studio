@@ -122,6 +122,8 @@ class Applier:
             e.param(v, "motion", "scale", base)
 
     def capa(self, cp):
+        if cp.get("tarjeta"):
+            return self.tarjeta(cp)
         e = self.e
         cl = e.place(cp["img"], cp["pista"], cp["start"], cp["dur"], audio=False)
         v = cl[0]
@@ -134,6 +136,27 @@ class Applier:
             e.kf(v, "motion", "position", [(0, [x0, y], "easeOut"), (self.bf(10), [x, y], "linear")], cp["start"])
         elif cp["pista"] == "Producto":
             e.param(v, "motion", "position", [x, y])
+        self.st["clips"][cp["id"]] = {"v": v}
+        self.keep(cp["bloque"], cl)
+
+    def tarjeta(self, cp):
+        """pegatina@1: tarjeta compuesta (ponente, fecha, QR, logo, flecha) dibujada a la escala del lienzo,
+        colocada a tamaño real y animada con la entrada del DS (desliza, golpe, caída, pop)."""
+        import pegatina
+        png, _, _ = pegatina.tarjeta(self.ds, cp["tarjeta"], self.work / "tarjetas" / f"{cp['id']}.png")
+        cl = self.e.place(png, cp["pista"], cp["start"], cp["dur"], audio=False)
+        v = cl[0]
+        x, y = cp["pos"][0] * self.W, cp["pos"][1] * self.H
+        sc = 100 * cp.get("escala", 1.0)
+        self.e.param(v, "motion", "scale", sc)
+        self.e.param(v, "motion", "position", [x, y])
+        rot = cp.get("inclina", 0) or 0
+        if rot:
+            self.e.param(v, "motion", "rotation", rot)
+        a = cp.get("anim")
+        if a:
+            self.sty.animar(v, "motion", "opacity", cp["start"], cp["dur"], a, [x, y], rot, sc,
+                            desde=-1 if cp["pos"][0] > 0.55 else 1)
         self.st["clips"][cp["id"]] = {"v": v}
         self.keep(cp["bloque"], cl)
 
@@ -160,7 +183,7 @@ class Applier:
             e.param(cl[0], "volume", "level", x["db"])
             self.st["clips"][x["id"]] = {"a": cl[0]}
             self.keep(x["bloque"], cl)
-        if "*" in blocks and "musica" not in self.st["clips"]:
+        if "*" in blocks and c.get("musica") and "musica" not in self.st["clips"]:
             m = c["musica"]
             path = m.get("archivo")
             if not path:
@@ -189,7 +212,8 @@ class Applier:
                 self.keep(m["bloque"], [r["clip"]])
         for s in c["subtitulos"]:
             if s["bloque"] in blocks:
-                r = sty.text("subtitulo", s["texto"], s["start"], s["dur"], self.ds["roles_texto"]["subtitulo"]["pos"])
+                r = sty.text("subtitulo", s["texto"], s["start"], s["dur"], self.ds["roles_texto"]["subtitulo"]["pos"],
+                             resaltar=s.get("resaltar"))
                 out[s["id"]] = r
                 self.keep(s["bloque"], [r["clip"]])
         for t in c["textos"]:
@@ -326,6 +350,7 @@ def main():
     comp = jload(a.compiled)
     ds = ds_del_compilado(comp)
     work = Path(a.work or Path(a.compiled).parent)
+    work.mkdir(parents=True, exist_ok=True)
     stf = work / "estado.json"
     state = jload(stf) if (stf.exists() and a.live and not a.nuevo) else {"clips": {}, "creados": {}, "textos": {}, "fases": {}}
     for k in ("clips", "creados", "textos", "fases"):

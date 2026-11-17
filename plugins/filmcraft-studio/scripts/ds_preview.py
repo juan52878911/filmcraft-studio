@@ -172,7 +172,11 @@ def fc_frames(ds, tmp):
     e.place(ds["fondos"]["plano"], "Main", 2, 2, audio=False)
     st.text("marca", ds["marca"].get("barra", "MARCA"), 2, 2, (0.5, 0.06))
     st.text("etiqueta", "ETIQUETA", 2, 2, (0.5, 0.24))
-    st.text("subtitulo", "Subtítulo de 20 c", 2, 2, (0.5, 0.78))
+    if "kicker" in ds["roles_texto"]:                 # pegatina@1: kicker que se escribe y palabra clave resaltada
+        st.text("kicker", "NOS ACOMPAÑA", 2, 2, ds["roles_texto"]["kicker"].get("pos") or (0.07, 0.12))
+    sub = ds["roles_texto"]["subtitulo"]
+    st.text("subtitulo", "una carrera" if sub.get("resalta") else "Subtítulo de 20 c", 2, 2, sub.get("pos") or (0.5, 0.78),
+            resaltar=[[4, 11]] if sub.get("resalta") else None)
     proj = Path(tmp) / "ds-preview.fcproj"
     e.save_as(proj)
     e.close()

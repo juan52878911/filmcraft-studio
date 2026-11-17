@@ -20,7 +20,7 @@ const REQ_ANIDADAS: [&str; 34] = ["continuidad.entrada", "continuidad.zoom_crash
 const PISTAS_VIDEO: [&str; 3] = ["Fondo", "Main", "Mattes"];
 const PISTAS_AUDIO: [&str; 2] = ["Dialogue", "Music"];
 const PAL: [&str; 4] = ["fondo", "oscuro", "claro", "acento1"];
-const ANIMS: [&str; 5] = ["popIn", "wordReveal", "eco", "calorEntra", "ninguna"];
+const ANIMS: [&str; 10] = ["popIn", "wordReveal", "eco", "calorEntra", "golpe", "desliza", "caida", "pop", "escribe", "ninguna"];
 const ROLES_MIN: [&str; 10] = ["marca", "subtitulo", "etiqueta", "eco", "pill", "tag", "titulo", "cierre", "meta", "pie"];
 const ROLES_CON_POS: [&str; 2] = ["marca", "subtitulo"];
 
@@ -211,6 +211,12 @@ pub fn validar(ds: &Value, raw: &Value) -> (Vec<String>, Vec<String>) {
                 let m = format!("rol {name}: contraste {c:.1}:1 de {} sobre {bc_s} (mínimo {minimo:.1})", py_str(&tc));
                 if c < 2.5 { err.push(m) } else { warn.push(m) }
             }
+        }
+        // pegatina@1: sombra, contorno, prefijo y resaltado también nombran colores de la paleta
+        let extra = [r.get("sombra").and_then(|x| x.get("color")), r.get("contorno").and_then(|x| x.get("color")),
+                     r.get("prefijo").and_then(|x| x.get("color")), r.get("resalta")];
+        for c in extra.into_iter().flatten() {
+            if !ok_ref(c) { err.push(format!("rol {name}: color '{}' no está en la paleta", py_str(c))) }
         }
     }
     let home = catalogo::casa().display().to_string();

@@ -13,6 +13,8 @@ Un DS es `design-systems/<id>/ds.json` + `assets/`. Separa dos capas:
 Esquema comentado: `${CLAUDE_SKILL_DIR}/references/esquema.md`. Ejemplo completo y aprobado: `${CLAUDE_PLUGIN_ROOT}/design-systems/sbg-brutalista-s5/`.
 Los DS que crea el usuario van a `${CLAUDE_PLUGIN_DATA}/design-systems/` (sobreviven a actualizaciones del plugin). La ruta se sustituye en este texto, pero el entorno de Bash no la trae: expórtala antes de los comandos (bloque de abajo); sin ella, los scripts caen en `~/.cache/filmcraft-studio/`. Si hay DS aprobados en `~/.cache/filmcraft-studio/design-systems/` y la carpeta de datos está vacía, ofrece copiarlos allí.
 
+Gramáticas: `brutalista@1` (la del ejemplo), `termo@1` (promos) y `pegatina@1` (reel con presentador y rótulos tipo pegatina, tarjetas compuestas y subtítulos con palabra clave resaltada: `${CLAUDE_PLUGIN_ROOT}/skills/design-system-video/references/pegatina.md`).
+
 ## Catálogo y ciclo de aprobación (`ds_studio.py`)
 
 Antes de cada llamada a un script (el estado del shell no persiste entre llamadas):

@@ -4,6 +4,19 @@ Formato: una sección por versión, de la más nueva a la más vieja.
 
 ## 0.4.0 — sin publicar
 
+- **Gramática `pegatina@1`** (reel con presentador y rótulos tipo pegatina, medida fotograma a fotograma; `scripts/pegatina.py` y `skills/design-system-video/references/pegatina.md`):
+  - cajas inclinadas con sombra dura;
+  - entradas `golpe`, `desliza`, `caida`, `pop` y `escribe` (el kicker se escribe con un Crop), y salida en fundido;
+  - el rótulo entra antes de su palabra y vive hasta el final del bloque;
+  - subtítulos de 1-3 palabras con la palabra clave resaltada (cifras, nombres propios y la lista `resaltar` del plan);
+  - tarjetas compuestas (`ponente`, `fecha`, `qr`, `logo`, `flecha`) dibujadas a la escala del lienzo, con reparto de pistas para que no se pisen;
+  - DS sin música (`musica.ninguna`) y sin barra de marca (`marca.barra` vacía).
+
+  Esquemas y `cine validar-ds` al día.
+- **Arreglos**:
+  - el inicio de los textos se redondea a fotogramas antes de medir lo que queda del bloque, y ya no se adelantan por un fotograma de más;
+  - `apply_plan --work` crea la carpeta si no existe.
+
 - **Motor determinista `cine`** (Rust, `motor/`, lanzador `bin/cine`): `validar-ds` (sustituye a `ds_validate.py`, que se borra), `elegir-ds` (sustituye al ranking de `brief_infer.match_ds`, con ΔE en OKLab), `medir-video`, `criterios` (comprueba los criterios de la biblia y da la tabla del informe), `puntuar` (6 ejes del crítico con reglas fijas), `nota` (veredicto, 5 arreglos y Mejora/Regresión/Empate) y `ab`. Se compila con `nix build` (flake en la raíz), `motor/compilar.sh` o el workflow `motor`; los binarios van en `bin/<so>-<arq>/` y no se suben.
 - **Un solo crítico con IA**: `critico` y `critico-estilo` se funden en `critico-juicio`, que solo juzga historia, copy, originalidad y los criterios marcados `juicio`, con las medidas como evidencia y techo. A/B a ciegas solo si la nota es ambigua; un bloqueante nuevo es Regresión.
 - **Criterios de la biblia** con `medida` y `juicio` (esquema ampliado; los `{id, que, como}` siguen valiendo). Detalle, paridad y tiempos en `AUDITORIA.md`.

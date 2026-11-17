@@ -23,6 +23,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from common import FUNCIONALES, cli, cubre, jload, jsave, load_ds, norm  # noqa: E402,F401
 from fcstyle import measure  # noqa: E402
+from pegatina import es_pegatina, palabras_clave, rangos  # noqa: E402
 from freezones import best_spot, occupancy, sin_vision  # noqa: E402
 
 POP_ROLES = {"etiqueta", "concepto", "escalon", "eco", "nombre"}
@@ -248,14 +249,15 @@ class Compiler:
                 if st is None:
                     self.avisos.append(f"{bid}: no encontré '{t.get('palabra')}' para «{t['texto']}»; va al inicio del bloque")
                     st, seg = Tb, (bsegs[0] if bsegs else None)
+                st = self.snap(st)                          # en fotogramas antes de medir lo que queda de bloque
                 if t["rol"] == "eco":
                     n = len(r["colores"])
                     dur = n * (self.bf(r.get("frames", 8)) + self.bf(2))
                 else:
                     seg_end = (seg["start"] + seg["dur"]) if seg else Te
                     dur = t.get("dur") or min(3.5, max(0.8, seg_end - st))
-                    if tipo in ("tarjeta", "titulo", "cierre"):
-                        dur = t.get("dur") or (Te - st)
+                    if tipo in ("tarjeta", "titulo", "cierre") or es_pegatina(r.get("anim")):
+                        dur = t.get("dur") or (Te - st)        # pegatina@1: el rótulo vive hasta el final del bloque
                 dur = self.snap(min(dur, max(0.2, Te - st)) if t["rol"] != "eco" else dur)
                 if st + dur > Te + 1e-4:
                     # nada pasa del final del bloque: en el último alargaría la secuencia (negro al final) y
@@ -308,19 +310,35 @@ class Compiler:
                 if t["rol"] == "eco":
                     for k in range(len(r["colores"])):
                         sfx.append(self.ev(r.get("sfx", "blip"), item["start"] + k * (self.bf(r.get("frames", 8)) + self.bf(2)), bid))
-                elif r.get("anim") in ("popIn", "calorEntra") and r.get("sfx") and t.get("sfx", True):
+                elif (r.get("anim") in ("popIn", "calorEntra") or es_pegatina(r.get("anim"))) and r.get("sfx") and t.get("sfx", True):
                     sfx.append(self.ev(r["sfx"], item["start"], bid))
             for e in b.get("sfx", []):
                 sfx.append(self.ev(e["tipo"], Tb + e.get("t", 0), bid, e.get("db")))
             for ci, c in enumerate(b.get("capas", [])):
                 st = Tb + c.get("t", 0)
-                cdur = self.snap(c.get("dur", 1.5))
+                if c.get("palabra"):                        # anclada a una palabra, como los textos
+                    sp, _ = self.text_time(c, bsegs, Tb, Te)
+                    if sp is None:
+                        self.avisos.append(f"{bid}.c{ci + 1}: no encontré '{c['palabra']}'; va al inicio del bloque")
+                    else:
+                        st = sp
+                cdur = self.snap(c.get("dur") or ((Te - self.snap(st)) if c.get("tarjeta") else 1.5))
                 if self.snap(st) + cdur > Te + 1e-4:       # una capa nunca pasa del final de su bloque
                     cdur = self.snap(Te - self.snap(st))
                     if cdur <= 0:
                         self.avisos.append(f"{bid}.c{ci + 1}: la capa empieza en {st:.2f} s, después del bloque; la salto")
                         continue
                     self.avisos.append(f"{bid}.c{ci + 1}: la capa pasaba del final del bloque ({Te:.2f} s): dura {cdur:.2f} s")
+                if c.get("tarjeta"):                       # pegatina@1: tarjeta compuesta, se dibuja en apply_plan
+                    tj = ds.get("tarjetas", {}).get(c["tarjeta"].get("tipo"), {})
+                    capas.append({"id": f"{bid}.c{ci + 1}", "bloque": bid, "tarjeta": c["tarjeta"],
+                                  "pista": c.get("pista", tj.get("pista", "Tarjeta")), "start": self.snap(st), "dur": cdur,
+                                  "anim": c.get("anim", tj.get("anim", "desliza")), "inclina": c.get("inclina", tj.get("inclina", 0)),
+                                  "escala": c.get("escala", 1.0), "pos": c.get("pos", tj.get("pos", [0.4, 0.2]))})
+                    k_sfx = c.get("sfx", tj.get("sfx"))
+                    if k_sfx:
+                        sfx.append(self.ev(k_sfx, st, bid))
+                    continue
                 capas.append({"id": f"{bid}.c{ci + 1}", "bloque": bid, "img": c.get("img") or ds["fondos"].get(c.get("fondo", "cap")),
                               "pista": c.get("pista", "Producto"), "start": self.snap(st), "dur": cdur,
                               "entra": c.get("entra"), "escala": c.get("escala", 0.72), "pos": c.get("pos", [0.5, 0.5])})
@@ -361,6 +379,7 @@ class Compiler:
             sfx.append(self.ev("gancho", 0, segs[0]["bloque"]))
 
         self.alloc_text_tracks(texts)
+        self.alloc_tarjetas(capas, texts)
         total = round(T, 4)
         marca = self.brand_spans(blocks_out, total)
         music = self.music(blocks_out, total)
@@ -385,6 +404,8 @@ class Compiler:
                 hit = self.find_word(s["stem"], t["palabra"], s["in"], s["out"])
                 if hit:
                     st = s["start"] + (hit[0] - s["in"]) / s["speed"] + t.get("desfase", 0)
+                    # pegatina@1: el rótulo entra unos fotogramas antes de su palabra
+                    st = max(s["start"], st - self.bf(self.ds.get("animaciones", {}).get("adelanto_f", 0)))
                     return st, s
             return None, None
         st = Tb + t.get("t", 0)
@@ -432,9 +453,19 @@ class Compiler:
             self.avisos.append(f"{seg['id']}: el pop-up de {t0:.2f}s roza cuerpos ({info['solape']})")
         return pos, info
 
+    def abre_frase(self, stem, w):
+        """¿La palabra w abre frase? (es la primera de la transcripción o la anterior acaba en . ? ! …)."""
+        ws = self.words(stem)
+        i = next((k for k, x in enumerate(ws) if x is w), None)
+        if i is None:
+            i = next((k for k, x in enumerate(ws) if x["s"] == w["s"] and x["w"] == w["w"]), 0)
+        return i == 0 or bool(re.search(r"[.?!…]$", ws[i - 1]["w"].strip()))
+
     def captions(self, bsegs, bid):
         r = self.ds["roles_texto"]["subtitulo"]
         mx = r.get("max_chars", 20)
+        mp = r.get("max_palabras") or 99
+        extra = self.plan.get("resaltar", [])
         out = []
         for s in bsegs:
             if s["tipo"] != "video" or s["mute"]:
@@ -444,7 +475,7 @@ class Compiler:
             chunks, cur = [], []
             for w in ws:
                 txt = self.corr.get(norm(w["w"]), w["w"])
-                if cur and len(" ".join(x[0] for x in cur)) + 1 + len(txt) > mx:
+                if cur and (len(" ".join(x[0] for x in cur)) + 1 + len(txt) > mx or len(cur) >= mp):
                     carry = []                                  # no acabar una línea en palabra funcional
                     while len(cur) > 1 and norm(cur[-1][0]) in FUNCIONALES and not re.search(r"[.?!,:]$", cur[-1][0]):
                         carry.insert(0, cur.pop())
@@ -466,11 +497,20 @@ class Compiler:
                 st, en = self.snap(st), self.snap(en)
                 if en - st < 0.15:
                     continue
-                out.append({"id": f"{s['id']}.s{k + 1}", "bloque": bid, "texto": " ".join(x[0] for x in c),
-                            "start": st, "dur": round(en - st, 4)})
+                item = {"id": f"{s['id']}.s{k + 1}", "bloque": bid, "texto": " ".join(x[0] for x in c),
+                        "start": st, "dur": round(en - st, 4)}
+                if r.get("resalta"):                    # pegatina@1: palabra clave del golpe en otro color
+                    pal = [x[0] for x in c]
+                    ini = [self.abre_frase(s["stem"], x[1]) for x in c]
+                    idx = palabras_clave(pal, ini, extra, r.get("resalta_max", 2))
+                    if idx:
+                        item["resaltar"] = rangos(pal, idx)
+                out.append(item)
         return out
 
     def brand_spans(self, blocks, total):
+        if not self.ds["marca"].get("barra"):          # sin barra de marca (pegatina@1: el reel no la lleva)
+            return []
         spans, cur = [], None
         for b in blocks:
             if b["tipo"] in SIN_MARCA:
@@ -487,6 +527,8 @@ class Compiler:
 
     def music(self, blocks, total):
         m = self.ds["musica"]
+        if m.get("ninguna"):                           # pegatina@1 (como el reel medido): solo voz y golpes
+            return None
         return {"bloque": "*", "dur": total, "bpm": m.get("bpm", 112), "archivo": m.get("archivo"),
                 "keyframes": music_keyframes(blocks, total, m)}
 
@@ -516,6 +558,27 @@ class Compiler:
                     break
             else:
                 self.avisos.append(f"{t['id']}: sin pista de texto libre para «{t['texto'][:20]}»")
+
+    def alloc_tarjetas(self, capas, texts):
+        """pegatina@1: dos tarjetas a la vez no comparten pista (FilmCraft recortaría la primera); la segunda va a la
+        siguiente pista libre de textos y capas."""
+        busy = {}
+        for x in texts + [c for c in capas if not c.get("tarjeta")]:
+            if x.get("pista"):
+                busy.setdefault(x["pista"], []).append((x["start"], x["start"] + x["dur"]))
+        vt = self.ds["pistas"]["video"]
+        for c in sorted((c for c in capas if c.get("tarjeta")), key=lambda x: x["start"]):
+            a, b = c["start"], c["start"] + c["dur"]
+            pool = [c["pista"]] + [t for t in ("Tarjeta", "Producto", "Labels", "Pills", "Tags", "Eco") if t in vt and t != c["pista"]]
+            for tr in pool:
+                if all(b <= x0 + 1e-4 or a >= x1 - 1e-4 for x0, x1 in busy.get(tr, [])):
+                    busy.setdefault(tr, []).append((a, b))
+                    if tr != c["pista"]:
+                        self.avisos.append(f"{c['id']}: la tarjeta pasa a la pista {tr} (la suya estaba ocupada)")
+                    c["pista"] = tr
+                    break
+            else:
+                self.avisos.append(f"{c['id']}: sin pista libre para la tarjeta; se recortará la anterior")
 
     def alloc_sfx(self, evs, total=None):
         tracks = self.ds["pistas"].get("sfx", ["SFX"])
